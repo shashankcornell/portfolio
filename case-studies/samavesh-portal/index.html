@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Samavesh Portal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Samavesh Portal: the public site, editorial CMS and AI pipeline Shashank Mishra designed and built to turn recorded policy discourses into published papers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Samavesh Portal additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* Homepage drawing */
+.mock { border: 1px solid var(--ink); border-radius: 12px; overflow: hidden; background: var(--paper); }
+.mock .chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.mock .chrome i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #b9b9b2; display: inline-block; }
+.mock .chrome span { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mock svg { display: block; width: 100%; height: auto; }
+.mock svg .serif { font-family: Georgia, 'Times New Roman', serif; }
+.mock svg .sans { font-family: var(--font); }
+.mock svg .mono { font-family: var(--mono); }
+
+/* Pipeline */
+.pipe { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
+.st { display: flex; flex-direction: column; gap: 8px; padding-right: 18px; position: relative; min-width: 0; }
+.st:last-child { padding-right: 0; }
+.st .box { flex: 1; border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--ink); min-height: 150px; }
+.st .box b { font-size: 15px; line-height: 1.25; }
+.st .box span { font-size: 12.5px; color: var(--body); line-height: 1.45; }
+.st .who { align-self: flex-start; font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--ink); padding: 0 6px; color: var(--ink); background: var(--paper); }
+.st .out { font-family: var(--mono); font-size: 11px; color: var(--body); line-height: 1.4; }
+.st:not(:last-child) .box::after { content: ""; position: absolute; right: 2px; top: 60px; width: 14px; border-top: 1px solid var(--ink); }
+.st:not(:last-child) .box::before { content: ""; position: absolute; right: 0; top: 56px; border: 4.5px solid transparent; border-left: 6px solid var(--ink); border-right: 0; }
+.pipe-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.pipe-key span { display: inline-flex; align-items: center; gap: 8px; }
+.pipe-key i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--ink); }
+@media (max-width: 900px) {
+  .pipe { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .st { padding: 0; }
+  .st .box { min-height: 0; }
+  .st .box::before, .st .box::after { display: none; }
+}
+@media (max-width: 480px) { .pipe { grid-template-columns: 1fr; } }
+
+/* Tagging */
+.tagmap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 28px; align-items: stretch; }
+.card { border: 1px solid var(--ink); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.card .ph { height: 120px; border-radius: 6px; background: repeating-linear-gradient(135deg, var(--soft) 0 8px, #ececea 8px 9px); }
+.card h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; }
+.card .when { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tags { display: flex; flex-direction: column; gap: 8px; }
+.tg { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.tg .f { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+.tg .v { color: var(--ink); font-weight: 600; }
+.tg .to { font-size: 13px; color: var(--body); }
+.tg .to::before { content: "→ "; color: var(--ink); }
+@media (max-width: 860px) { .tagmap { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .tg { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Site map */
+.map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.map > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.map h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.01em; }
+.map p { font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.map ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 10px; }
+.map-also { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--body); }
+.map-also span.c { background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+@media (max-width: 760px) { .map { grid-template-columns: 1fr; } }
+
+/* Ways to read */
+.ways { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.ways > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ways .k11 { color: var(--body); }
+.ways b { font-size: 16px; }
+.ways span:last-child { font-size: 13px; color: var(--body); line-height: 1.45; }
+@media (max-width: 900px) { .ways { grid-template-columns: 1fr 1fr; } }
+
+.reader { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.reader > div { border-radius: 10px; padding: 14px; font-size: 13.5px; color: var(--body); line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
+.reader b { color: var(--ink); font-size: 14.5px; }
+@media (max-width: 760px) { .reader { grid-template-columns: 1fr 1fr; } }
+
+/* Ordering */
+.order { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.order > div { border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.order h4 { font-size: 16px; font-weight: 600; }
+.order p { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.dots { display: grid; grid-template-columns: repeat(6, 22px); gap: 6px; }
+.dots i { width: 22px; height: 22px; border-radius: 4px; display: block; border: 1px solid rgba(0,0,0,.25); }
+.dots i.e { background: transparent; border-style: dashed; }
+.manual { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; border: 1px solid var(--ink); border-radius: 12px; padding: 18px 20px; max-width: 760px; }
+.manual .sw { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.manual .sw i { width: 34px; height: 18px; border-radius: 9px; background: var(--ink); position: relative; display: inline-block; }
+.manual .sw i::after { content: ""; position: absolute; right: 3px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); }
+.manual p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+@media (max-width: 760px) { .order { grid-template-columns: 1fr; } .manual { grid-template-columns: 1fr; } }
+
+/* Design process */
+.proc { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+.proc > div:not(.ar) { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.proc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.proc svg { width: 100%; height: auto; display: block; background: var(--paper); border-radius: 6px; }
+.proc .ar { display: grid; place-items: center; font-size: 22px; }
+@media (max-width: 760px) { .proc { grid-template-columns: 1fr; } .proc .ar { transform: rotate(90deg); } }
+
+/* Why it feels clean */
+.clean { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
+.cl { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.cl .n { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 4px; }
+.cl h4 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.cl p { font-size: 14.5px; color: var(--body); line-height: 1.55; }
+.cl .ex { min-width: 0; }
+@media (max-width: 760px) { .cl { grid-template-columns: 28px minmax(0, 1fr); } .cl .ex { grid-column: 2; } }
+.navx { display: flex; gap: 28px; align-items: baseline; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.navx b { font-family: Georgia, serif; font-weight: 400; font-size: 20px; margin-right: auto; }
+.sw5 { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw5 div { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.sw5 i { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.type3 { display: flex; flex-direction: column; gap: 8px; }
+.type3 div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.type3 .k11 { color: var(--muted); }
+.type3 .s1 { font-family: Georgia, serif; font-size: 22px; }
+.type3 .s2 { font-size: 16px; }
+.type3 .s3 { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
+.ul-demo { font-family: Georgia, serif; font-size: 26px; display: flex; flex-direction: column; gap: 6px; }
+.ul-demo span { color: rgba(17,17,17,.4); }
+.ul-demo span.on { color: var(--ink); box-shadow: inset 0 -2px 0 #2496ff; align-self: flex-start; }
+.btns { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 13px; }
+.btns .pill { font-family: Georgia, serif; font-size: 15px; border: 1px solid var(--ink); border-radius: 999px; padding: 5px 16px; }
+.btns .circ { display: inline-flex; align-items: center; gap: 10px; }
+.btns .circ i { width: 26px; height: 26px; border: 1px solid var(--ink); border-radius: 50%; display: inline-grid; place-items: center; font-style: normal; }
+
+/* Editors */
+.cms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cms > div { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.cms b { font-size: 15px; color: var(--ink); }
+.flow { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 1px 8px; background: var(--paper); color: var(--ink); }
+@media (max-width: 760px) { .cms { grid-template-columns: 1fr; } }
+.stack { font-size: 14px; color: var(--body); display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.stack .l { font-size: 13px; color: var(--ink); }
+@media (max-width: 560px) { .stack { grid-template-columns: 1fr; gap: 4px; } }
+.mock .tp { cursor: pointer; }
+.mock .tp text { fill-opacity: .42; transition: fill-opacity 350ms ease; }
+.mock .tp.on text { fill-opacity: 1; }
+.mock .tp .ul { transform-box: fill-box; transform-origin: left center; transform: scaleX(0); transition: transform 600ms cubic-bezier(.7,0,.3,1); }
+.mock .tp.on .ul { transform: scaleX(1); }
+.mock .tp:focus { outline: none; }
+.mock .ti { opacity: 0; transition: opacity 700ms ease; }
+.mock .ti.on { opacity: 1; }
+.mock.hovering .ti { transition: none; }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="build" aria-label="Back to I build"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="build">I build</a> / Products</span>
+    <span class="right">Designed and built from scratch</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Product · Case study</span>
+          <h1>Samavesh Portal</h1>
+        </div>
+        <div>
+          <p class="lede">The public home of Samavesh. Every discourse is recorded, turned into a transcript, shaped into a paper with the help of AI, checked by an editor and published here, tagged by topic and by the people who took part.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Role</span><span class="v">Designer and builder</span></div>
+        <div><span class="l">Year</span><span class="v">2026</span></div>
+        <div><span class="l">Organisation</span><span class="v">Samavesh</span></div>
+        <div><span class="l">Scope</span><span class="v">Public site, admin CMS and AI pipeline</span></div>
+      </div>
+
+      <figure>
+        <div class="mock">
+          <div class="chrome"><i></i><i></i><i></i><span>samavesh.in</span></div>
+          <!-- The homepage hero, drawn from the code: two-tone background, topic list on the left, a tall topic image on the right. -->
+          <svg viewBox="0 0 1100 520" role="img" aria-label="Drawing of the Samavesh homepage. A pale blue left half lists policy topics in a large serif, with Health underlined in blue. A pale cream right half holds a tall image for the active topic. The top bar shows the Samavesh name, a search icon, and Think, Meet, Act.">
+            <rect x="0" y="0" width="550" height="520" fill="#f6fcff"/>
+            <rect x="550" y="0" width="550" height="520" fill="#fefff6"/>
+            <image href="img/monogram.png" x="58" y="22" width="44" height="44" preserveAspectRatio="xMidYMid meet"/>
+            <text x="114" y="51" class="sans" font-size="22" fill="#111">Samavesh</text>
+            <circle cx="788" cy="42" r="7" fill="none" stroke="#111" stroke-width="1.3"/><path d="M793 47 L799 53" stroke="#111" stroke-width="1.3"/>
+            <text x="840" y="50" class="sans" font-size="17" fill="#111">Think</text>
+            <text x="928" y="50" class="sans" font-size="17" fill="#111">Meet</text>
+            <text x="1010" y="50" class="sans" font-size="17" fill="#111">Act</text>
+            <text x="72" y="128" class="serif" font-size="19" font-style="italic" fill="#111">Decoding policies on…</text>
+            <g class="tp on" data-i="0" tabindex="0" role="button" aria-label="Show Health"><rect x="64" y="146" width="330" height="60" fill="transparent"/><text x="72" y="192" class="serif" font-size="44" fill="#111">Health</text><rect class="ul" x="72" y="200" width="128" height="2.5" fill="#2496ff"/></g>
+            <g class="tp" data-i="1" tabindex="0" role="button" aria-label="Show Education"><rect x="64" y="206" width="330" height="60" fill="transparent"/><text x="72" y="252" class="serif" font-size="44" fill="#111">Education</text><rect class="ul" x="72" y="260" width="192" height="2.5" fill="#2496ff"/></g>
+            <g class="tp" data-i="2" tabindex="0" role="button" aria-label="Show Urbanization"><rect x="64" y="266" width="330" height="60" fill="transparent"/><text x="72" y="312" class="serif" font-size="44" fill="#111">Urbanization</text><rect class="ul" x="72" y="320" width="256" height="2.5" fill="#2496ff"/></g>
+            <g class="tp" data-i="3" tabindex="0" role="button" aria-label="Show Governance"><rect x="64" y="326" width="330" height="60" fill="transparent"/><text x="72" y="372" class="serif" font-size="44" fill="#111">Governance</text><rect class="ul" x="72" y="380" width="213" height="2.5" fill="#2496ff"/></g>
+            <text x="72" y="456" class="mono" font-size="16" fill="#111">More topics</text>
+            <circle cx="198" cy="451" r="15" fill="none" stroke="#111" stroke-width="1.2"/>
+            <path d="M191 451 H205 M200 446 L205 451 L200 456" fill="none" stroke="#111" stroke-width="1.2"/>
+            <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V10" stroke="#d6d6cf" stroke-width="1"/></pattern></defs>
+            <image class="ti on" data-i="0" href="img/topic-health.jpg" x="740" y="96" width="290" height="424" preserveAspectRatio="xMidYMid slice"/>
+            <image class="ti" data-i="1" href="img/topic-education.jpg" x="740" y="96" width="290" height="424" preserveAspectRatio="xMidYMid slice"/>
+            <image class="ti" data-i="2" href="img/topic-urbanisation.jpg" x="740" y="96" width="290" height="424" preserveAspectRatio="xMidYMid slice"/>
+            <image class="ti" data-i="3" href="img/topic-governance.jpg" x="740" y="96" width="290" height="424" preserveAspectRatio="xMidYMid slice"/>
+          </svg>
+        </div>
+      </figure>
+    </section>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#why"><span>01</span><span>Why a portal</span></a>
+          <a href="#pipeline"><span>02</span><span>From talk to text</span></a>
+          <a href="#structure"><span>03</span><span>How content is tagged</span></a>
+          <a href="#read"><span>04</span><span>Ways to read</span></a>
+          <a href="#front"><span>05</span><span>The front page</span></a>
+          <a href="#design"><span>06</span><span>Design</span></a>
+          <a href="#editors"><span>07</span><span>For editors</span></a>
+          <a href="#outcome"><span>08</span><span>Outcome</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="why">
+          <div class="sec-head"><span class="k">01</span><h2>Why a portal</h2></div>
+          <p class="lead2">Samavesh had years of discourses and no good place to keep them.</p>
+          <p>Each Samavesh discourse is a recorded conversation on one policy idea. The record of that work lived in a spreadsheet of past sessions and in scattered posts. A reader could not browse it by topic or by speaker, and the team could not publish without someone technical in the loop.</p>
+          <p>I wanted one place where a recording becomes a paper, the paper is credited to everyone who shaped it, and a reader can find it from any of those angles.</p>
+        </section>
+
+        <section class="sec" id="pipeline">
+          <div class="sec-head"><span class="k">02</span><h2>From talk to text</h2></div>
+          <p>A recording is only useful once someone can read it. AI does the slow middle steps. A person still checks the result before anything goes out.</p>
+          <div class="pipe">
+            <div class="st"><div class="box bg-soft"><span class="who">People</span><b>Discourse</b><span>A presenter makes the case, discussants respond, a moderator keeps it on track.</span></div><span class="out">Recording</span></div>
+            <div class="st"><div class="box bg-soft"><span class="who">People</span><b>Google Drive</b><span>The recording is uploaded through a form into a shared Drive folder.</span></div><span class="out">Audio file</span></div>
+            <div class="st"><div class="box bg-lilac"><span class="who">AI</span><b>Whisper script</b><span>A script picks up the file and runs OpenAI's Whisper speech-to-text model.</span></div><span class="out">Transcript</span></div>
+            <div class="st"><div class="box bg-lilac"><span class="who">AI</span><b>Structuring</b><span>A language model turns the transcript into a structured article, with every idea from the session on one page.</span></div><span class="out">Draft paper</span></div>
+            <div class="st"><div class="box bg-yellow"><span class="who">Editor</span><b>Editing</b><span>An editor checks the draft against the recording and edits it.</span></div><span class="out">Approved paper</span></div>
+            <div class="st"><div class="box bg-green"><span class="who">Portal</span><b>Published</b><span>The paper goes live, tagged by topic, presenter, discussants and editor.</span></div><span class="out">Discourse paper</span></div>
+          </div>
+          <div class="pipe-key"><span><i class="bg-soft"></i>People</span><span><i class="bg-lilac"></i>AI</span><span><i class="bg-yellow"></i>Human check</span><span><i class="bg-green"></i>Public</span></div>
+          <p>The model only writes the first draft. The editor decides what is published.</p>
+        </section>
+
+        <section class="sec" id="structure">
+          <div class="sec-head"><span class="k">03</span><h2>How content is tagged</h2></div>
+          <p>Every piece on the portal carries the same set of tags: the policy domain it belongs to, its format, and each person who worked on it, with their role. Those tags are what tie the whole site together. Each one leads to a page of its own.</p>
+          <div class="tagmap">
+            <div class="card">
+              <span class="k11">Example piece</span>
+              <div class="ph" aria-hidden="true"></div>
+              <span class="when">DISCOURSE · 8 MIN READ</span>
+              <h4>A discourse paper on a policy idea</h4>
+            </div>
+            <div class="tags">
+              <div class="tg bg-blue"><span class="f">Domain</span><span class="v">Education</span><span class="to">Topic page, with everything on education</span></div>
+              <div class="tg bg-gray"><span class="f">Format</span><span class="v">Discourse</span><span class="to">Format page, with all discourses</span></div>
+              <div class="tg bg-yellow"><span class="f">Presenter</span><span class="v">Who made the case</span><span class="to">Their profile, listing their work</span></div>
+              <div class="tg bg-pink"><span class="f">Discussants</span><span class="v">Who responded</span><span class="to">Each discussant's profile</span></div>
+              <div class="tg bg-green"><span class="f">Editor</span><span class="v">Who edited it</span><span class="to">The editor's profile</span></div>
+            </div>
+          </div>
+          <p>The same person can be a presenter on one piece and an editor on another. So people are stored once, as profiles, and each piece links to them with a role: author, presenter, discussant, contributor or editor. Formats are not fixed either. The team can add a new one, such as a podcast or an op-ed, without code.</p>
+
+          <h3>Where everything lives</h3>
+          <p>The site has three words of navigation, each a verb.</p>
+          <div class="map">
+            <div class="bg-blue"><h4>Think</h4><p>Everything Samavesh publishes.</p><ul><li>Discourses, articles, papers</li><li>Podcasts and op-eds</li><li>Filters by topic and format</li></ul></div>
+            <div class="bg-green"><h4>Meet</h4><p>The people behind the work.</p><ul><li>Team and advisory board</li><li>Fellows</li><li>Presenters and discussants</li></ul></div>
+            <div class="bg-pink"><h4>Act</h4><p>Ways to take part.</p><ul><li>Summit</li><li>Fellowship</li><li>Externship</li></ul></div>
+          </div>
+          <div class="map-also"><span>Also:</span><span class="c">Topics</span><span class="c">The Gazette</span><span class="c">News</span><span class="c">Search</span><span class="c">Careers</span><span class="c">Editorial policy</span><span class="c">Code of conduct</span></div>
+        </section>
+
+        <section class="sec" id="read">
+          <div class="sec-head"><span class="k">04</span><h2>Ways to read</h2></div>
+          <p>Because every piece is tagged the same way, a reader can come at the work from whichever angle they care about.</p>
+          <div class="ways">
+            <div><span class="k11">01</span><b>By topic</b><span>Eleven policy domains, from health and education to national security.</span></div>
+            <div><span class="k11">02</span><b>By format</b><span>Discourses, articles, papers, podcasts or op-eds.</span></div>
+            <div><span class="k11">03</span><b>By person</b><span>A profile lists everything someone presented, discussed or edited.</span></div>
+            <div><span class="k11">04</span><b>The Gazette</b><span>Each journal edition, with its editorial board and the pieces in it.</span></div>
+            <div><span class="k11">05</span><b>Search</b><span>One box that looks across content, people and topics.</span></div>
+          </div>
+          <h3>On the page itself</h3>
+          <div class="reader">
+            <div class="bg-soft"><b>Reading time</b>Shown next to the format, so a reader knows what they are starting.</div>
+            <div class="bg-soft"><b>Audio and video</b>A discourse can carry its recording right above the text.</div>
+            <div class="bg-soft"><b>Credits</b>Authors first, then presenters, discussants and editors.</div>
+            <div class="bg-soft"><b>Citation</b>A ready APA citation with a copy button, for anyone who wants to cite the work.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="front">
+          <div class="sec-head"><span class="k">05</span><h2>The front page</h2></div>
+          <p>The homepage should feel varied and current, without someone rearranging it every week. A short rule chooses what goes in the grid.</p>
+          <div class="order">
+            <div>
+              <span class="k11">Step 1</span><h4>Three of every format</h4>
+              <div class="dots" aria-hidden="true"><i class="bg-blue"></i><i class="bg-blue"></i><i class="bg-blue"></i><i class="bg-pink"></i><i class="bg-pink"></i><i class="bg-pink"></i><i class="bg-yellow"></i><i class="bg-yellow"></i><i class="bg-yellow"></i><i class="e"></i><i class="e"></i><i class="e"></i></div>
+              <p>The newest three pieces of each format get a place, so no format disappears.</p>
+            </div>
+            <div>
+              <span class="k11">Step 2</span><h4>Fill with the newest</h4>
+              <div class="dots" aria-hidden="true"><i class="bg-blue"></i><i class="bg-blue"></i><i class="bg-blue"></i><i class="bg-pink"></i><i class="bg-pink"></i><i class="bg-pink"></i><i class="bg-yellow"></i><i class="bg-yellow"></i><i class="bg-yellow"></i><i class="bg-blue"></i><i class="bg-yellow"></i><i class="bg-blue"></i></div>
+              <p>The remaining slots go to the most recent work, whatever its format.</p>
+            </div>
+            <div>
+              <span class="k11">Step 3</span><h4>Shuffle</h4>
+              <div class="dots" aria-hidden="true"><i class="bg-pink"></i><i class="bg-blue"></i><i class="bg-yellow"></i><i class="bg-blue"></i><i class="bg-pink"></i><i class="bg-yellow"></i><i class="bg-blue"></i><i class="bg-yellow"></i><i class="bg-pink"></i><i class="bg-blue"></i><i class="bg-yellow"></i><i class="bg-blue"></i></div>
+              <p>The grid is shuffled on each visit, so formats mix and returning readers see a fresh page.</p>
+            </div>
+          </div>
+          <div class="manual">
+            <span class="sw"><i></i>Manual</span>
+            <p>When the editors want a particular front page, for a summit or a new Gazette, they switch to manual mode and pin exactly what goes where, along with a featured story.</p>
+          </div>
+        </section>
+
+        <section class="sec" id="design">
+          <div class="sec-head"><span class="k">06</span><h2>Design</h2></div>
+          <p>I designed the interface myself before writing any code. It started on paper, moved to Figma, and was then built.</p>
+          <div class="proc">
+            <div class="bg-soft">
+              <h4>Hand sketch</h4>
+              <svg viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#111" stroke-width="1.2" stroke-linecap="round"><path d="M14 16 Q60 13 186 17"/><path d="M16 34 Q40 31 70 35"/><path d="M16 50 Q50 47 88 51"/><path d="M16 66 Q44 63 76 67"/><path d="M118 30 L176 29 L178 106 L117 107 Z"/><path d="M120 34 L174 104 M174 32 L121 104" stroke-width=".7"/><path d="M16 92 Q34 90 52 93"/></g></svg>
+              <span>Layouts drawn by hand: the topic list, the tall image, the grid.</span>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="bg-lilac">
+              <h4>Figma</h4>
+              <svg viewBox="0 0 200 120" aria-hidden="true"><rect x="0" y="0" width="100" height="120" fill="#f6fcff"/><rect x="100" y="0" width="100" height="120" fill="#fefff6"/><g fill="#111"><rect x="14" y="12" width="40" height="5"/><rect x="14" y="32" width="50" height="9"/><rect x="14" y="48" width="66" height="9" opacity=".4"/><rect x="14" y="64" width="56" height="9" opacity=".4"/></g><rect x="14" y="43" width="50" height="1.5" fill="#2496ff"/><rect x="128" y="24" width="56" height="86" fill="#e6e6e1"/></svg>
+              <span>Every page set out at full fidelity: type, spacing, colour.</span>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="bg-green">
+              <h4>Code</h4>
+              <svg viewBox="0 0 200 120" aria-hidden="true"><g font-family="JetBrains Mono, monospace" font-size="9" fill="#111"><text x="12" y="20">&lt;section&gt;</text><text x="24" y="36" fill="#76766f">Decoding policies on…</text><text x="24" y="52">&lt;ol topics /&gt;</text><text x="24" y="68">&lt;Image fade /&gt;</text><text x="12" y="84">&lt;/section&gt;</text><text x="12" y="104" fill="#76766f">Next.js · TypeScript</text></g></svg>
+              <span>Built in Next.js with AI coding assistance, matching the Figma.</span>
+            </div>
+          </div>
+
+          <h3>Why it feels clean</h3>
+          <p>The portal is kept minimal on purpose. A policy reader comes to read, so the design steps back. Six choices do most of the work.</p>
+          <div class="clean">
+            <div class="cl">
+              <span class="n">01</span>
+              <div><h4>Three words of navigation</h4><p>Think, Meet, Act. Everything else is one level down. The top bar never competes with the page.</p></div>
+              <div class="ex"><div class="navx"><b>Samavesh</b><span>Think</span><span>Meet</span><span>Act</span></div></div>
+            </div>
+            <div class="cl">
+              <span class="n">02</span>
+              <div><h4>One ink, one accent</h4><p>Type and lines are near-black on white. Two faint tints split the hero. A single blue appears only to mark where you are.</p></div>
+              <div class="ex sw5">
+                <div><i style="background:#111"></i>Ink</div>
+                <div><i style="background:#fff"></i>Paper</div>
+                <div><i style="background:#f6fcff"></i>Blue tint</div>
+                <div><i style="background:#fefff6"></i>Cream tint</div>
+                <div><i style="background:#2496ff"></i>Accent</div>
+              </div>
+            </div>
+            <div class="cl">
+              <span class="n">03</span>
+              <div><h4>Type does the work</h4><p>A serif for anything you read, set large with generous line spacing. A plain sans for navigation. A small mono for labels. No icons are needed to tell them apart.</p></div>
+              <div class="ex type3">
+                <div><span class="k11">Reading</span><span class="s1">Libre Caslon</span></div>
+                <div><span class="k11">Navigation</span><span class="s2">Montserrat</span></div>
+                <div><span class="k11">Labels</span><span class="s3">INCONSOLATA</span></div>
+              </div>
+            </div>
+            <div class="cl">
+              <span class="n">04</span>
+              <div><h4>Lines, not boxes</h4><p>Sections are separated by thin 1px rules. There are no shadows and no heavy cards. The only shapes are round pills and circled arrows.</p></div>
+              <div class="ex btns"><span class="pill">Health</span><span class="circ">Browse all <i>→</i></span></div>
+            </div>
+            <div class="cl">
+              <span class="n">05</span>
+              <div><h4>Quiet motion</h4><p>An underline draws under the active topic. The topic image cross-fades. Cards turn gray on hover, and content rises gently as you scroll. Nothing moves unless you do.</p></div>
+              <div class="ex ul-demo"><span class="on">Health</span><span>Education</span></div>
+            </div>
+            <div class="cl">
+              <span class="n">06</span>
+              <div><h4>Images that match</h4><p>Photos come from many sources. One soft, muted grade with a light grain is applied to all of them, so the grid reads as one set rather than a collage.</p></div>
+              <div class="ex"><svg viewBox="0 0 240 70" width="100%" aria-hidden="true"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9d3dd"/><stop offset="1" stop-color="#9aa6b2"/></linearGradient><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8d2c6"/><stop offset="1" stop-color="#a59f94"/></linearGradient><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cdd5cc"/><stop offset="1" stop-color="#99a397"/></linearGradient></defs><rect x="0" y="0" width="76" height="70" rx="4" fill="url(#g1)"/><rect x="82" y="0" width="76" height="70" rx="4" fill="url(#g2)"/><rect x="164" y="0" width="76" height="70" rx="4" fill="url(#g3)"/></svg></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="editors">
+          <div class="sec-head"><span class="k">07</span><h2>For editors</h2></div>
+          <p>An admin CMS lets the team run the site without a developer.</p>
+          <div class="cms">
+            <div class="bg-soft"><b>Write and credit</b>A rich-text editor. Credit each person with their role, tag the topic, and add audio, video or an embed.<span class="flow"><span>Draft</span>→<span>Published</span>→<span>Archived</span></span></div>
+            <div class="bg-soft"><b>Shape the site</b>Edit the Think, Meet, Act, Careers and policy pages, post news with social embeds, build each Gazette edition, and set the front page.</div>
+            <div class="bg-soft"><b>Keep it tidy</b>Images are cropped on upload. When a record is deleted, its images go too, unless another page still uses them.</div>
+          </div>
+          <h3>Trust</h3>
+          <p>A site that hosts public debate has to be hard to deface. Logins are limited to ten attempts every fifteen minutes and passwords are stored hashed. Changing content needs a signed-in session. Inputs are validated, published text is cleaned against a list of safe tags, and uploads are limited to images under 5 MB.</p>
+        </section>
+
+        <section class="sec" id="outcome">
+          <div class="sec-head"><span class="k">08</span><h2>Outcome</h2></div>
+          <p>I built the portal between April and June 2026. A one-time import brought in 88 past discourses from August 2020 to February 2022, creating presenter profiles and topic tags as it went. The data model grew from a simple publishing schema into one that also covers the journal, news, configurable pages and the front page, across four migrations.</p>
+          <div class="keys">
+            <div class="key bg-blue"><span class="v num">88</span><span class="l">past discourses imported, 2020 to 2022</span></div>
+            <div class="key bg-green"><span class="v num">11</span><span class="l">policy topics a reader can browse</span></div>
+            <div class="key bg-yellow"><span class="v num">60+</span><span class="l">API endpoints behind the site and CMS</span></div>
+            <div class="key bg-pink"><span class="v num">17</span><span class="l">data models, over 4 schema migrations</span></div>
+          </div>
+          <div class="stack"><span class="l">Built with</span><span>Next.js 14 · TypeScript · PostgreSQL / Prisma · NextAuth · Tiptap · Cloudinary · Tailwind CSS · OpenAI Whisper · Google Drive</span></div>
+          <a class="next" href="#" data-site-link="build"><span class="l">Back to</span><span class="t">I build →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['why', 'pipeline', 'structure', 'read', 'front', 'design', 'editors', 'outcome'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+
+    // Samavesh hero: hover or focus a topic to switch the image; otherwise it cycles every 7 seconds, as on the site.
+    (function () {
+      var mock = document.querySelector('.mock'); if (!mock) return;
+      var tps = mock.querySelectorAll('.tp'), tis = mock.querySelectorAll('.ti'), idx = 0, hover = false;
+      function show(i) { idx = i; tps.forEach(function (t, k) { t.classList.toggle('on', k === i); }); tis.forEach(function (t, k) { t.classList.toggle('on', k === i); }); }
+      tps.forEach(function (t, k) {
+        t.addEventListener('mouseenter', function () { hover = true; mock.classList.add('hovering'); show(k); });
+        t.addEventListener('focus', function () { show(k); });
+        t.addEventListener('click', function () { show(k); });
+      });
+      tps.forEach(function (t) { try { t.querySelector('.ul').setAttribute('width', t.querySelector('text').getComputedTextLength()); } catch (e) {} });
+      var list = tps[0].parentNode;
+      list.addEventListener('mouseleave', function () { hover = false; mock.classList.remove('hovering'); });
+      if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches))
+        setInterval(function () { if (!hover) show((idx + 1) % tps.length); }, 7000);
+    })();
+</script>
+</body></html>

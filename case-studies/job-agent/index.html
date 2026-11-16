@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Job Agent: the system Shashank Mishra built with Claude to keep one facts bank, find and score jobs every morning, draft fact-checked applications and fill application forms.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Samavesh Portal additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* Homepage drawing */
+.mock { border: 1px solid var(--ink); border-radius: 12px; overflow: hidden; background: var(--paper); }
+.mock .chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.mock .chrome i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #b9b9b2; display: inline-block; }
+.mock .chrome span { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mock svg { display: block; width: 100%; height: auto; }
+.mock svg .serif { font-family: Georgia, 'Times New Roman', serif; }
+.mock svg .sans { font-family: var(--font); }
+.mock svg .mono { font-family: var(--mono); }
+
+/* Pipeline */
+.pipe { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
+.st { display: flex; flex-direction: column; gap: 8px; padding-right: 18px; position: relative; min-width: 0; }
+.st:last-child { padding-right: 0; }
+.st .box { flex: 1; border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--ink); min-height: 150px; }
+.st .box b { font-size: 15px; line-height: 1.25; }
+.st .box span { font-size: 12.5px; color: var(--body); line-height: 1.45; }
+.st .who { align-self: flex-start; font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--ink); padding: 0 6px; color: var(--ink); background: var(--paper); }
+.st .out { font-family: var(--mono); font-size: 11px; color: var(--body); line-height: 1.4; }
+.st:not(:last-child) .box::after { content: ""; position: absolute; right: 2px; top: 60px; width: 14px; border-top: 1px solid var(--ink); }
+.st:not(:last-child) .box::before { content: ""; position: absolute; right: 0; top: 56px; border: 4.5px solid transparent; border-left: 6px solid var(--ink); border-right: 0; }
+.pipe-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.pipe-key span { display: inline-flex; align-items: center; gap: 8px; }
+.pipe-key i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--ink); }
+@media (max-width: 900px) {
+  .pipe { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .st { padding: 0; }
+  .st .box { min-height: 0; }
+  .st .box::before, .st .box::after { display: none; }
+}
+@media (max-width: 480px) { .pipe { grid-template-columns: 1fr; } }
+
+/* Tagging */
+.tagmap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 28px; align-items: stretch; }
+.card { border: 1px solid var(--ink); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.card .ph { height: 120px; border-radius: 6px; background: repeating-linear-gradient(135deg, var(--soft) 0 8px, #ececea 8px 9px); }
+.card h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; }
+.card .when { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tags { display: flex; flex-direction: column; gap: 8px; }
+.tg { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.tg .f { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+.tg .v { color: var(--ink); font-weight: 600; }
+.tg .to { font-size: 13px; color: var(--body); }
+.tg .to::before { content: "→ "; color: var(--ink); }
+@media (max-width: 860px) { .tagmap { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .tg { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Site map */
+.map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.map > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.map h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.01em; }
+.map p { font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.map ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 10px; }
+.map-also { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--body); }
+.map-also span.c { background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+@media (max-width: 760px) { .map { grid-template-columns: 1fr; } }
+
+/* Ways to read */
+.ways { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.ways > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ways .k11 { color: var(--body); }
+.ways b { font-size: 16px; }
+.ways span:last-child { font-size: 13px; color: var(--body); line-height: 1.45; }
+@media (max-width: 900px) { .ways { grid-template-columns: 1fr 1fr; } }
+
+.reader { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.reader > div { border-radius: 10px; padding: 14px; font-size: 13.5px; color: var(--body); line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
+.reader b { color: var(--ink); font-size: 14.5px; }
+@media (max-width: 760px) { .reader { grid-template-columns: 1fr 1fr; } }
+
+/* Ordering */
+.order { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.order > div { border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.order h4 { font-size: 16px; font-weight: 600; }
+.order p { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.dots { display: grid; grid-template-columns: repeat(6, 22px); gap: 6px; }
+.dots i { width: 22px; height: 22px; border-radius: 4px; display: block; border: 1px solid rgba(0,0,0,.25); }
+.dots i.e { background: transparent; border-style: dashed; }
+.manual { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; border: 1px solid var(--ink); border-radius: 12px; padding: 18px 20px; max-width: 760px; }
+.manual .sw { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.manual .sw i { width: 34px; height: 18px; border-radius: 9px; background: var(--ink); position: relative; display: inline-block; }
+.manual .sw i::after { content: ""; position: absolute; right: 3px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); }
+.manual p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+@media (max-width: 760px) { .order { grid-template-columns: 1fr; } .manual { grid-template-columns: 1fr; } }
+
+/* Design process */
+.proc { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+.proc > div:not(.ar) { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.proc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.proc svg { width: 100%; height: auto; display: block; background: var(--paper); border-radius: 6px; }
+.proc .ar { display: grid; place-items: center; font-size: 22px; }
+@media (max-width: 760px) { .proc { grid-template-columns: 1fr; } .proc .ar { transform: rotate(90deg); } }
+
+/* Why it feels clean */
+.clean { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
+.cl { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.cl .n { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 4px; }
+.cl h4 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.cl p { font-size: 14.5px; color: var(--body); line-height: 1.55; }
+.cl .ex { min-width: 0; }
+@media (max-width: 760px) { .cl { grid-template-columns: 28px minmax(0, 1fr); } .cl .ex { grid-column: 2; } }
+.navx { display: flex; gap: 28px; align-items: baseline; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.navx b { font-family: Georgia, serif; font-weight: 400; font-size: 20px; margin-right: auto; }
+.sw5 { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw5 div { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.sw5 i { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.type3 { display: flex; flex-direction: column; gap: 8px; }
+.type3 div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.type3 .k11 { color: var(--muted); }
+.type3 .s1 { font-family: Georgia, serif; font-size: 22px; }
+.type3 .s2 { font-size: 16px; }
+.type3 .s3 { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
+.ul-demo { font-family: Georgia, serif; font-size: 26px; display: flex; flex-direction: column; gap: 6px; }
+.ul-demo span { color: rgba(17,17,17,.4); }
+.ul-demo span.on { color: var(--ink); box-shadow: inset 0 -2px 0 #2496ff; align-self: flex-start; }
+.btns { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 13px; }
+.btns .pill { font-family: Georgia, serif; font-size: 15px; border: 1px solid var(--ink); border-radius: 999px; padding: 5px 16px; }
+.btns .circ { display: inline-flex; align-items: center; gap: 10px; }
+.btns .circ i { width: 26px; height: 26px; border: 1px solid var(--ink); border-radius: 50%; display: inline-grid; place-items: center; font-style: normal; }
+
+/* Editors */
+.cms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cms > div { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.cms b { font-size: 15px; color: var(--ink); }
+.flow { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 1px 8px; background: var(--paper); color: var(--ink); }
+@media (max-width: 760px) { .cms { grid-template-columns: 1fr; } }
+.stack { font-size: 14px; color: var(--body); display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.stack .l { font-size: 13px; color: var(--ink); }
+@media (max-width: 560px) { .stack { grid-template-columns: 1fr; gap: 4px; } }
+
+/* ---------- Job Agent additions ---------- */
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.three > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--body); line-height: 1.5; }
+.three .k11 { color: var(--body); }
+.three h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.three .fix { margin-top: auto; border-top: 1px solid rgba(0,0,0,.15); padding-top: 10px; font-size: 13px; color: var(--ink); }
+@media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
+
+/* Many CVs into one bank */
+.funnel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, .9fr) auto minmax(0, 1.1fr); gap: 14px; align-items: center; }
+.funnel .ar { font-size: 22px; text-align: center; }
+.stackcv { display: flex; flex-wrap: wrap; gap: 5px; }
+.stackcv i { width: 26px; height: 34px; border: 1px solid var(--ink); border-radius: 3px; background: var(--paper); display: block; position: relative; }
+.stackcv i::after { content: ""; position: absolute; left: 5px; right: 5px; top: 7px; height: 12px; background: repeating-linear-gradient(var(--line) 0 1px, transparent 1px 4px); }
+.stackcv i.used { background: var(--yellow); }
+.fcap { font-size: 12.5px; color: var(--body); margin-top: 8px; line-height: 1.4; }
+.bank { border: 1.5px solid var(--ink); border-radius: 12px; padding: 16px; background: var(--green); display: flex; flex-direction: column; gap: 8px; }
+.bank b { font-size: 16px; }
+.bank .rows { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 11px; }
+.bank .rows span { background: var(--paper); border-radius: 4px; padding: 3px 7px; display: flex; justify-content: space-between; gap: 8px; }
+.cats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.cats span { border: 1px solid var(--ink); border-radius: 6px; padding: 6px 6px; font-size: 12px; line-height: 1.25; text-align: center; background: var(--paper); }
+@media (max-width: 860px) { .funnel { grid-template-columns: 1fr; } .funnel .ar { transform: rotate(90deg); } }
+
+.rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.rules > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.rules b { color: var(--ink); font-size: 15px; }
+.rules code { font-family: var(--mono); font-size: 11.5px; background: var(--soft); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+@media (max-width: 760px) { .rules { grid-template-columns: 1fr; } }
+
+/* Sources bar */
+.srcbar { display: flex; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid var(--ink); }
+.srcbar div { display: flex; align-items: center; justify-content: center; font-size: 12px; border-right: 1px solid var(--ink); white-space: nowrap; overflow: hidden; }
+.srcbar div:last-child { border-right: 0; }
+@media (max-width: 600px) { .srcbar div { font-size: 0; } }
+.srclab { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.srclab span { display: inline-flex; gap: 8px; align-items: center; }
+.srclab i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--ink); display: inline-block; }
+.srclab b { color: var(--ink); font-weight: 600; }
+
+/* Funnel of jobs */
+.jf { display: flex; flex-direction: column; gap: 8px; max-width: 760px; }
+.jf .row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; align-items: center; }
+.jf .lab { font-size: 13.5px; color: var(--ink); line-height: 1.3; }
+.jf .lab small { display: block; font-size: 12px; color: var(--muted); }
+.jf .bar2 { min-width: max-content; padding-right: 10px; height: 30px; border-radius: 0 6px 6px 0; display: flex; align-items: center; padding-left: 10px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink); border: 1px solid var(--ink); }
+@media (max-width: 560px) { .jf .row { grid-template-columns: 1fr; gap: 4px; } }
+
+.sub { border: 1px solid var(--ink); border-radius: 12px; padding: 18px 20px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.sub > div { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.sub .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; color: var(--ink); line-height: 1.1; }
+@media (max-width: 760px) { .sub { grid-template-columns: 1fr 1fr; } }
+
+/* Agents */
+.agents { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.agent-list { display: flex; flex-direction: column; gap: 8px; }
+.ag { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; border-radius: 10px; padding: 12px 14px; font-size: 13.5px; color: var(--body); line-height: 1.4; }
+.ag .n { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+.ag b { display: block; color: var(--ink); font-size: 14.5px; }
+.ag .m { font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--ink); padding: 0 6px; color: var(--ink); background: var(--paper); white-space: nowrap; }
+.folder { border: 1px solid var(--ink); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.folder .k11 { font-family: var(--mono); margin-bottom: 4px; }
+.folder span { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--line); padding-bottom: 4px; }
+.folder span em { font-style: normal; color: var(--muted); }
+.check { margin-top: 10px; border-radius: 10px; padding: 14px; background: var(--pink); font-family: var(--font); font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.check b { color: var(--ink); }
+.pf { display: flex; gap: 6px; margin-top: 8px; }
+.pf span { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 8px; background: var(--paper); color: var(--ink); }
+@media (max-width: 860px) { .agents { grid-template-columns: 1fr; } }
+
+/* Dashboard drawing */
+.dash { font-size: 12.5px; }
+.dash .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.dash .top b { font-size: 15px; }
+.dash .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.dash .tabs span { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 12px; color: var(--body); }
+.dash .tabs span.on { border-color: var(--ink); color: var(--ink); background: var(--yellow); }
+.dash table { font-size: 12.5px; }
+.dash th, .dash td { padding: 10px 12px; }
+.dash th:first-child, .dash td:first-child { padding-left: 16px; }
+.dash td:first-child { font-weight: 400; }
+.dash .score { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.dash .score i { width: 56px; height: 6px; border-radius: 3px; background: var(--soft); position: relative; display: inline-block; overflow: hidden; }
+.dash .score i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--ink); }
+.dash .btn { border: 1px solid var(--ink); border-radius: 6px; padding: 2px 8px; font-size: 11.5px; white-space: nowrap; color: var(--ink); }
+.dash .why { color: var(--muted); font-size: 12px; }
+.dash .gen { font-family: var(--mono); font-size: 11px; color: var(--ink); background: var(--green); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+
+/* Extension */
+.ext { display: grid; grid-template-columns: minmax(0, .9fr) auto minmax(0, 1.1fr); gap: 16px; align-items: center; }
+.ext .ar { font-size: 22px; text-align: center; }
+.prof { border: 1.5px solid var(--ink); border-radius: 12px; padding: 14px; background: var(--green); display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 11px; }
+.prof .k11 { color: var(--ink); }
+.prof span { background: var(--paper); border-radius: 5px; padding: 5px 8px; display: grid; grid-template-columns: 1fr auto; gap: 8px; color: var(--ink); }
+.prof span em { font-style: normal; color: var(--muted); }
+.form { border: 1px solid var(--ink); border-radius: 12px; overflow: hidden; }
+.form .chrome { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.form .chrome i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #b9b9b2; display: inline-block; }
+.form .chrome span { margin-left: 8px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.form .chrome b { margin-left: auto; font-family: var(--mono); font-size: 10.5px; font-weight: 400; border: 1px solid var(--ink); border-radius: 4px; padding: 1px 6px; background: var(--yellow); }
+.form .fields { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.form label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); }
+.form label span { border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; font-size: 13px; color: var(--ink); background: var(--blue); }
+.form label span.empty { background: var(--paper); color: var(--muted); }
+@media (max-width: 860px) { .ext { grid-template-columns: 1fr; } .ext .ar { transform: rotate(90deg); } }
+
+.limits { display: flex; flex-wrap: wrap; gap: 8px; }
+.limits span { font-size: 13px; border: 1px dashed var(--ink); border-radius: 999px; padding: 4px 12px; color: var(--body); }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="build" aria-label="Back to I build"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="build">I build</a> / Products</span>
+    <span class="right">Personal project</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Product · Case study</span>
+          <h1>Job Agent</h1>
+        </div>
+        <div>
+          <p class="lede">A job search that runs itself. One reviewed facts bank replaces a pile of CVs. Every morning an agent finds and scores new postings. On request it drafts a fact-checked CV and letter, and a Chrome extension fills in the application form.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Role</span><span class="v">Designer and builder</span></div>
+        <div><span class="l">Year</span><span class="v">2026</span></div>
+        <div><span class="l">Team</span><span class="v">Solo, built with Claude</span></div>
+        <div><span class="l">Runs on</span><span class="v">My laptop, on a Claude subscription</span></div>
+      </div>
+
+      <figure>
+        <div class="mock dash">
+          <div class="chrome"><i></i><i></i><i></i><span>localhost:8501</span></div>
+          <div class="top"><b>Jobs</b><div class="tabs"><span class="on">New today</span><span>Top matches</span><span>Deadlines</span><span>Applied</span></div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Role</th><th>Category</th><th>Score</th><th>Why</th><th>Files</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Associate Product Manager<br><span class="why">Organisation A · New York</span></td><td>Product</td><td><span class="score" style="--w:86%"><i></i>86</span></td><td class="why">Matches platform 0-to-1 work</td><td><span class="gen">CV · letter</span></td><td><span class="btn">Open</span></td></tr>
+                <tr><td>Policy Analyst, AI<br><span class="why">Organisation B · Washington</span></td><td>AI policy</td><td><span class="score" style="--w:78%"><i></i>78</span></td><td class="why">Policy plus product background</td><td class="why">none yet</td><td><span class="btn">Generate</span></td></tr>
+                <tr><td>Program Associate, Urban<br><span class="why">Organisation C · Remote</span></td><td>Urban policy</td><td><span class="score" style="--w:71%"><i></i>71</span></td><td class="why">City programs, government work</td><td class="why">none yet</td><td><span class="btn">Generate</span></td></tr>
+                <tr><td>Trust and Safety Analyst<br><span class="why">Organisation D · San Francisco</span></td><td>Trust and safety</td><td><span class="score" style="--w:64%"><i></i>64</span></td><td class="why">Forum moderation results</td><td class="why">none yet</td><td><span class="btn">Generate</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>The local dashboard, drawn to show its layout. The rows are examples, not real postings or scores.</figcaption>
+      </figure>
+    </section>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#problem"><span>01</span><span>The problem</span></a>
+          <a href="#facts"><span>02</span><span>One facts bank</span></a>
+          <a href="#find"><span>03</span><span>Finding jobs</span></a>
+          <a href="#write"><span>04</span><span>Writing applications</span></a>
+          <a href="#portal"><span>05</span><span>The portal</span></a>
+          <a href="#extension"><span>06</span><span>The extension</span></a>
+          <a href="#outcome"><span>07</span><span>Outcome</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="problem">
+          <div class="sec-head"><span class="k">01</span><h2>The problem</h2></div>
+          <p class="lead2">I apply across many kinds of jobs, and every part of the search was slow and easy to get wrong.</p>
+          <div class="three">
+            <div class="bg-yellow"><span class="k11">01</span><h4>Too many CVs</h4>I had written a different CV for each kind of job. I could no longer tell which facts belonged in which CV, and the versions had started to disagree with each other.<span class="fix">Fix: one reviewed facts bank</span></div>
+            <div class="bg-blue"><span class="k11">02</span><h4>Finding the right jobs</h4>Checking dozens of career sites by hand took hours, and most postings were the wrong level or the wrong field.<span class="fix">Fix: a morning agent that finds and scores jobs</span></div>
+            <div class="bg-pink"><span class="k11">03</span><h4>Filling the same form</h4>Every application asked for the same name, education and work history again, in a slightly different form.<span class="fix">Fix: a Chrome extension that fills it in</span></div>
+          </div>
+        </section>
+
+        <section class="sec" id="facts">
+          <div class="sec-head"><span class="k">02</span><h2>One facts bank</h2></div>
+          <p>First I worked out the kinds of jobs I actually apply for. There are nine. Then I gathered every CV I had written into one file that holds every fact and every piece of work I have ever done, each with the CVs it came from.</p>
+          <div class="funnel">
+            <div>
+              <div class="stackcv" aria-hidden="true">
+                <i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i class="used"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <p class="fcap"><b>23 CV versions</b> collected. The <b>11</b> written in the last six months were used.</p>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="bank">
+              <b>Master profile</b>
+              <div class="rows">
+                <span>Experience<em>37</em></span>
+                <span>Projects<em>16</em></span>
+                <span>Awards<em>7</em></span>
+                <span>Education, skills, roles<em>16</em></span>
+              </div>
+              <span class="fcap">Every entry lists its source CVs. I settled 26 conflicts between versions by hand.</span>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div>
+              <div class="cats">
+                <span>Product</span><span>Data and AI</span><span>Strategy and ops</span>
+                <span>Trust and safety</span><span>Finance</span><span>Research and economics</span>
+                <span>AI policy</span><span>Urban policy</span><span>Development programs</span>
+              </div>
+              <p class="fcap">Nine categories. Each CV is built from the same bank, never from another CV.</p>
+            </div>
+          </div>
+          <p>Building the bank was the hard part, and I did it with Claude. It read every CV, lined up the same fact across versions, and flagged where they disagreed. I answered each conflict, and my answer became the rule. Where wording must stay fixed, the entry says so.</p>
+          <h3>Three files, three jobs</h3>
+          <div class="rules">
+            <div><b>What is true</b>The master profile. The only place a CV or letter may take a fact from.<code>master_profile.md</code></div>
+            <div><b>What to aim for</b>A targeting file. For each category, the highest level worth showing and the most years of experience a posting can ask for. It also states how deep each skill really is, so I am not shown jobs I should not apply to.<code>targeting.yaml</code></div>
+            <div><b>What to type into forms</b>An application profile. Contact details, education and jobs, each marked as verified with its source.<code>application_profile.json</code></div>
+          </div>
+        </section>
+
+        <section class="sec" id="find">
+          <div class="sec-head"><span class="k">03</span><h2>Finding jobs</h2></div>
+          <p>Every morning at 7:00 the agent checks the career sites of 125 organizations. Most hiring runs on a few job-board systems, so one reader for each covers most of the list.</p>
+          <div>
+            <div class="srcbar" role="img" aria-label="125 organizations: Greenhouse 76, Workday 19, Ashby 20, Lever 8, World Bank and UN 2.">
+              <div class="bg-blue" style="flex:76">Greenhouse 76</div>
+              <div class="bg-green" style="flex:20">Ashby 20</div>
+              <div class="bg-yellow" style="flex:19">Workday 19</div>
+              <div class="bg-pink" style="flex:8">8</div>
+              <div class="bg-lilac" style="flex:2"></div>
+            </div>
+          </div>
+          <div class="srclab"><span><i class="bg-blue"></i>Greenhouse <b>76</b></span><span><i class="bg-green"></i>Ashby <b>20</b></span><span><i class="bg-yellow"></i>Workday <b>19</b></span><span><i class="bg-pink"></i>Lever <b>8</b></span><span><i class="bg-lilac"></i>World Bank and UN <b>2</b></span></div>
+
+          <h3>Cheap checks first</h3>
+          <p>Model calls are the scarce resource, so the agent spends them only where they matter. Plain rules go first. Only what survives reaches a model, and only the best reach the stronger one.</p>
+          <div class="jf">
+            <div class="row"><span class="lab">Fetched<small>All new postings</small></span><div class="bar2 bg-soft" style="width:100%">Every new posting, de-duplicated</div></div>
+            <div class="row"><span class="lab">Rule filter<small>No AI</small></span><div class="bar2 bg-gray" style="width:72%">Title words, location, level, blockers</div></div>
+            <div class="row"><span class="lab">Quick score<small>Claude Haiku</small></span><div class="bar2 bg-blue" style="width:44%">Up to 50 a day, 10 per call</div></div>
+            <div class="row"><span class="lab">Fit report<small>Haiku, then Sonnet</small></span><div class="bar2 bg-green" style="width:16%">Top 5</div></div>
+          </div>
+          <p>The rule filter drops jobs by title, location and seniority, and flags wording such as a security clearance or no visa sponsorship. The quick score ranks what is left against the facts bank. The top five a day, with a quick score of at least 50, get a full report that checks each requirement in the posting against my experience.</p>
+
+          <h3>Built on a subscription, not an API</h3>
+          <p>I did not have API access, so the agent runs through my Claude subscription. That shaped how it works.</p>
+          <div class="sub">
+            <div><span class="v">7:00</span>A background service starts at login and runs each morning. If the laptop was asleep, it catches up.</div>
+            <div><span class="v">150</span>A hard cap on automatic Claude calls a day.</div>
+            <div><span class="v">Pause</span>When the usage limit is reached, work stops and picks up again when it resets.</div>
+            <div><span class="v">Log</span>Every Claude call is recorded, so I can see what each step costs.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="write">
+          <div class="sec-head"><span class="k">04</span><h2>Writing applications</h2></div>
+          <p>When I pick a job, a team of separate agents writes the application. Each has one task. They talk only through files in one folder per job, so every step can be read and checked.</p>
+          <div class="agents">
+            <div class="agent-list">
+              <div class="ag bg-soft"><span class="n">01</span><span><b>Job analyst</b>Breaks the posting into requirements. It never sees my CV, so it cannot bend the job to fit me.</span><span class="m">Haiku</span></div>
+              <div class="ag bg-soft"><span class="n">02</span><span><b>Fit scorer</b>Matches each requirement to entries in the facts bank.</span><span class="m">Sonnet</span></div>
+              <div class="ag bg-yellow"><span class="n">03</span><span><b>CV writer</b>Builds a CV for the job from facts bank entries only.</span><span class="m">Agent</span></div>
+              <div class="ag bg-yellow"><span class="n">04</span><span><b>Letter writer</b>Drafts the cover letter on the same rule.</span><span class="m">Agent</span></div>
+              <div class="ag bg-pink"><span class="n">05</span><span><b>Fact-checker</b>Checks every claim against the facts bank and returns pass or fail.</span><span class="m">Agent</span></div>
+            </div>
+            <div>
+              <div class="folder">
+                <span class="k11">One folder per job</span>
+                <span>The posting<em>input</em></span>
+                <span>Requirements<em>01</em></span>
+                <span>Fit report<em>02</em></span>
+                <span>Tailored CV<em>03</em></span>
+                <span>Cover letter<em>04</em></span>
+                <span>Fact-check report<em>05</em></span>
+              </div>
+              <div class="check"><b>The fact-checker is adversarial.</b> It looks for any claim that is not in the facts bank. A fail sends the draft back with the reasons, for up to two rounds of fixes.<div class="pf"><span>PASS</span><span>FAIL → fix</span></div></div>
+            </div>
+          </div>
+          <p>The documents are rendered to PDF with headless Chrome. Nothing reaches an employer without my review.</p>
+        </section>
+
+        <section class="sec" id="portal">
+          <div class="sec-head"><span class="k">05</span><h2>The portal</h2></div>
+          <p>Everything lands in a local web dashboard. It is where I decide what to apply for.</p>
+          <div class="cms">
+            <div class="bg-soft"><b>See every job</b>All postings with their category, score, the reasons behind the score and the deadline.</div>
+            <div class="bg-soft"><b>Act on one</b>One button starts the agents for a job. The finished CV, letter and fact-check report appear next to it.</div>
+            <div class="bg-soft"><b>Tune without cost</b>Edit the targeting file and the next morning run applies it. No model calls are needed to change what I see.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="extension">
+          <div class="sec-head"><span class="k">06</span><h2>The extension</h2></div>
+          <p>The last slow step was the application form itself. I built a Chrome extension that fills it in from my application profile, so I only check and submit. It also sends any posting I find while browsing straight to the agent.</p>
+          <div class="ext">
+            <div class="prof">
+              <span class="k11">application_profile.json</span>
+              <span>Name<em>verified</em></span>
+              <span>Email and phone<em>verified</em></span>
+              <span>Work authorization<em>verified</em></span>
+              <span>Education · 3<em>verified</em></span>
+              <span>Employment · 4<em>verified</em></span>
+              <span>Skills and languages<em>verified</em></span>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="form">
+              <div class="chrome"><i></i><i></i><i></i><span>careers.example.com/apply</span><b>Fill</b></div>
+              <div class="fields">
+                <label>Full name<span>Shashank Mishra</span></label>
+                <label>School<span>Cornell University</span></label>
+                <label>Current or last employer<span>National Institute of Urban Affairs</span></label>
+                <label>Why do you want this role?<span class="empty">Left for me to write</span></label>
+              </div>
+            </div>
+          </div>
+          <p>Each field in the profile records whether I verified it and where it came from, so the extension only types what I have checked.</p>
+        </section>
+
+        <section class="sec" id="outcome">
+          <div class="sec-head"><span class="k">07</span><h2>Outcome</h2></div>
+          <p>The CV problem is solved. There is one source of truth, and every CV and letter is built from it. Searching now takes a few minutes each morning. As of October 2026 the agent had stored 2,193 postings, quick-scored 1,520 and written detailed fit reports for 127.</p>
+          <div class="keys">
+            <div class="key bg-blue"><span class="v num">125</span><span class="l">organizations checked every morning</span></div>
+            <div class="key bg-green"><span class="v num">2,193</span><span class="l">postings stored</span></div>
+            <div class="key bg-yellow"><span class="v num">1,520</span><span class="l">postings quick-scored</span></div>
+            <div class="key bg-pink"><span class="v num">127</span><span class="l">detailed fit reports</span></div>
+          </div>
+          <h3>What it is not</h3>
+          <div class="limits"><span>It runs on my laptop, not in the cloud</span><span>No vector search or retrieval</span><span>Scores are not formally evaluated</span><span>It never applies on its own</span></div>
+          <div class="stack"><span class="l">Built with</span><span>Python · SQLite · Claude Haiku and Sonnet via Claude Code · launchd scheduling · headless Chrome · Chrome extension (JavaScript)</span></div>
+          <a class="next" href="#" data-site-link="build"><span class="l">Back to</span><span class="t">I build →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['problem', 'facts', 'find', 'write', 'portal', 'extension', 'outcome'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLMs for Government Drafting</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="What makes a government document legitimate? An ongoing study evaluating large language models on drafting Indian government documents. By Shashank Mishra and Dr. Pranav Gupta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Legitimacy study additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.hero h1 { font-size: clamp(40px, 6vw, 76px); line-height: 1.02; }
+.hero h1 em { background: linear-gradient(transparent 24%, var(--yellow) 24%); }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.epi .abstract { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.epi .abstract p { font-size: 16px; color: var(--body); line-height: 1.6; font-weight: 400; letter-spacing: 0; }
+.epi .orig { font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.5; text-align: left; margin-top: 10px; color: var(--muted); max-width: 720px; }
+.epi .orig b { color: var(--ink); font-weight: 500; }
+
+.art { display: block; width: 100%; height: auto; }
+.art text { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.art .m { fill: var(--muted); }
+.scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 600px) { .scrollx .art { min-width: 620px; } #heroArt { display: none; } .scrollnote { display: block !important; } }
+.scrollnote { display: none; font-size: 12px; color: var(--muted); }
+
+.two, .three, .four { display: grid; gap: 12px; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.card { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.card b { color: var(--ink); font-size: 15px; }
+.card.line { border: 1px solid var(--ink); }
+.card .v { font-size: 30px; font-weight: 300; letter-spacing: -0.03em; color: var(--ink); line-height: 1.05; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .three { grid-template-columns: 1fr; } .four { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 4px 11px; background: var(--paper); color: var(--ink); }
+.flow span.hot { background: var(--pink); }
+.flow i { font-style: normal; color: var(--muted); }
+.mode { display: flex; flex-direction: column; gap: 10px; border-radius: 12px; padding: 16px; }
+.mode h4 { font-size: 16px; font-weight: 600; }
+.mode p { font-size: 13.5px; color: var(--body); }
+
+.calc { font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--soft); border-radius: 10px; padding: 14px 16px; line-height: 1.75; max-width: 720px; overflow-x: auto; white-space: nowrap; }
+.calc .c { color: var(--muted); }
+
+/* Interactive panels */
+.panel { border: 1px solid var(--ink); border-radius: 12px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: center; }
+.panel svg { width: 100%; max-width: 320px; height: auto; display: block; justify-self: center; }
+.panel .side { display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--body); min-width: 0; }
+.panel .big { font-size: 44px; font-weight: 300; letter-spacing: -0.04em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.panel .big small { font-size: 16px; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+.panel input[type=range] { width: 100%; accent-color: #111; }
+.panel .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: -6px; }
+.panel .tag { align-self: flex-start; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+.panel.wide { grid-template-columns: 1fr; }
+.outs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.outs > div { background: var(--soft); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.outs .l { font-size: 11.5px; color: var(--muted); }
+.outs .n { font-size: 22px; font-weight: 300; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.outs .n small { font-size: 12px; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.outs > div.hl { background: var(--yellow); }
+@media (max-width: 680px) { .panel { grid-template-columns: 1fr; } .outs { grid-template-columns: 1fr 1fr; } }
+
+/* Bars */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bars .row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 84px; gap: 12px; align-items: center; font-size: 13px; color: var(--body); }
+.bars .tr { height: 18px; position: relative; }
+.bars .b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+.bars .rng { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.18) 0 3px, transparent 3px 7px); }
+.bars .v { font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
+@media (max-width: 560px) { .bars .row { grid-template-columns: 96px minmax(0, 1fr) 70px; gap: 8px; font-size: 12px; } }
+
+.rules { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); max-width: 720px; }
+.rules b { color: var(--ink); }
+
+.risk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.risk > div { border: 1px dashed var(--ink); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.risk b { color: var(--ink); font-size: 15px; }
+@media (max-width: 760px) { .risk { grid-template-columns: 1fr; } }
+
+details.more2 { border-top: 1px solid var(--line); padding-top: 12px; }
+details.more2 summary { cursor: pointer; font-size: 14px; color: var(--ink); }
+.spec { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.spec td { border-bottom: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--body); }
+.spec td:first-child { color: var(--muted); width: 38%; }
+details.more2 ol { margin: 12px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--body); line-height: 1.45; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btns button { font: inherit; font-size: 13px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.btns button.on { background: var(--ink); color: var(--paper); }
+.btns .st { margin-left: auto; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; }
+.hero h1 { font-size: clamp(36px, 4.8vw, 60px); line-height: 1.06; }
+.kicker { font-size: clamp(22px, 2.6vw, 30px); font-weight: 300; letter-spacing: -0.02em; color: var(--ink); line-height: 1.25; max-width: 760px; }
+.lit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.lit > div { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.lit b { color: var(--ink); font-size: 15px; }
+.lit .src { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lit > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (max-width: 640px) { .lit { grid-template-columns: 1fr; } }
+.gap2 { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); gap: 0; align-items: stretch; }
+.gap2 > div { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.gap2 ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.gap2 .ar { display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--ink); }
+.gap2 h4 { font-size: 15px; font-weight: 600; }
+@media (max-width: 700px) { .gap2 { grid-template-columns: 1fr; gap: 8px; } .gap2 .ar { transform: rotate(90deg); } }
+.steps7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.steps7 > div { border: 1px solid var(--ink); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--body); line-height: 1.35; }
+.steps7 b { color: var(--ink); font-size: 13.5px; }
+@media (max-width: 900px) { .steps7 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .steps7 { grid-template-columns: 1fr 1fr; } }
+.prompt { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--ink); background: var(--soft); border-radius: 10px; padding: 14px 16px; white-space: pre-wrap; max-height: 320px; overflow: auto; }
+details.pd { border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+details.pd summary { cursor: pointer; font-size: 14px; color: var(--ink); }
+details.pd[open] summary { margin-bottom: 10px; }
+.dims { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dims > div { border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--body); line-height: 1.4; }
+.dims b { color: var(--ink); font-size: 14.5px; }
+.dims .w { align-self: flex-start; font-family: var(--mono); font-size: 11.5px; background: var(--paper); border-radius: 6px; padding: 2px 7px; color: var(--ink); }
+@media (max-width: 760px) { .dims { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .dims { grid-template-columns: 1fr; } }
+.formula { font-family: var(--mono); font-size: 13px; color: var(--ink); border-left: 3px solid var(--ink); padding: 6px 0 6px 16px; line-height: 1.8; max-width: 760px; }
+.scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.scale > div { border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--body); line-height: 1.35; }
+.scale .n { font-size: 26px; font-weight: 300; color: var(--ink); line-height: 1; }
+@media (max-width: 640px) { .scale { grid-template-columns: 1fr; } .scale > div { flex-direction: row; align-items: center; gap: 12px; } }
+.calc6 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+.calc6 label { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 2px 10px; font-size: 13px; color: var(--body); align-items: center; }
+.calc6 label input { grid-column: 1 / -1; width: 100%; accent-color: #111; }
+.calc6 label span.v { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+@media (max-width: 600px) { .calc6 { grid-template-columns: 1fr; } }
+.gdq { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.gdq .big { font-size: 52px; font-weight: 300; letter-spacing: -0.04em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.gdq .meter { flex: 1; min-width: 180px; height: 12px; background: var(--soft); border-radius: 999px; overflow: hidden; }
+.gdq .meter i { display: block; height: 100%; background: #111; border-radius: 999px; }
+.pilot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.pilot .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 36px; gap: 10px; align-items: center; font-size: 13px; color: var(--body); margin-bottom: 8px; }
+.pilot .dots { display: flex; gap: 4px; }
+.pilot .dots i { width: 18px; height: 12px; border-radius: 3px; background: var(--line); }
+.pilot .dots i.on { background: #111; }
+.pilot .dots.good i.on { background: #3a9d5d; }
+.pilot ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+@media (max-width: 700px) { .pilot { grid-template-columns: 1fr; } }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="write" aria-label="Back to I write"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="write">I write</a> / Society</span>
+    <span class="right">Ongoing study</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Ongoing study · AI in public administration</span>
+          <h1>Evaluating Large Language Models for Drafting Indian Government <em>Documents</em></h1>
+        </div>
+        <div>
+          <p class="lede">An AI model can write something that sounds exactly like a government order. Sounding right is not enough. This study asks what actually makes a government document valid, and builds a way to test whether AI drafts meet that bar.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Authors</span><span class="v">Shashank Mishra and Dr. Pranav Gupta</span></div>
+        <div><span class="l">Status</span><span class="v">Ongoing. Proposal and pilot stage.</span></div>
+        <div><span class="l">Corpus</span><span class="v">3,609 documents from the Ministry of Housing and Urban Affairs</span></div>
+        <div><span class="l">Contribution</span><span class="v">A six-part quality score for government documents</span></div>
+      </div>
+    </section>
+
+    <div class="epi">
+      <p class="kicker">What makes a government document a government document?</p>
+    </div>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#question"><span>01</span><span>The question</span></a>
+          <a href="#known"><span>02</span><span>What we already know</span></a>
+          <a href="#gaps"><span>03</span><span>The gaps</span></a>
+          <a href="#corpus"><span>04</span><span>The corpus</span></a>
+          <a href="#method"><span>05</span><span>The experiment</span></a>
+          <a href="#score"><span>06</span><span>How we score a draft</span></a>
+          <a href="#expect"><span>07</span><span>What we expect</span></a>
+          <a href="#pilot"><span>08</span><span>An early test</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="question">
+          <div class="sec-head"><span class="k">01</span><h2>The question</h2></div>
+          <p class="lead2">Government runs on documents. Tenders, orders, memoranda, guidelines and project proposals carry decisions, money and legal weight.</p>
+          <p>Drafting them takes time and skill, and many offices are short of both. Large language models (LLMs) can produce formal, official-sounding text in seconds. So the obvious question is whether they can help officials draft.</p>
+          <p>But a government document is not just text in the right tone. It must state the right facts: the correct authority, amounts, dates and legal references. It must follow a fixed structure, with every required section present. It must comply with procedure, such as eligibility rules and evaluation methods. A tender with the wrong deposit amount or a missing annexure is not a slightly worse tender. It is unusable, and it can cause real harm.</p>
+          <div class="three">
+            <div class="card bg-yellow"><span class="k11">Facts</span><b>Is it correct?</b>Departments, dates, amounts, legal references, designations.</div>
+            <div class="card bg-blue"><span class="k11">Form</span><b>Is it complete?</b>Every section that kind of document requires, in the expected order.</div>
+            <div class="card bg-pink"><span class="k11">Procedure</span><b>Is it compliant?</b>The legal and procedural elements that make it valid.</div>
+          </div>
+          <p>So we start from a more basic question: what makes a government document legitimate? Our answer becomes a test. We then use that test to measure how well LLMs draft real Indian government documents, and what kind of help they need to do it well.</p>
+        </section>
+
+        <section class="sec" id="known">
+          <div class="sec-head"><span class="k">02</span><h2>What we already know</h2></div>
+          <p>We surveyed recent work on AI for legal and government writing. Five findings stand out.</p>
+          <div class="lit">
+            <div><span class="src">Fitzpatrick et al., 2025</span><b>It depends on the task</b>In a field experiment, AI raised quality by 17% and speed by 34% on document tasks, but lowered quality by 12% on analytical tasks.</div>
+            <div><span class="src">LegalCheck, Amsterdam; Swiss procurement</span><b>Drafting support works with human oversight</b>Tools captured 80% to 100% of required content, and cut manual effort substantially in procurement.</div>
+            <div><span class="src">Magesh et al., 2025</span><b>Hallucination is still a real risk</b>Even purpose-built legal AI tools invent facts, and accuracy varies by jurisdiction.</div>
+            <div><span class="src">Wu et al., 2025</span><b>Domain adaptation helps a lot</b>A fine-tuned Gemma-27B outperformed GPT-4o on policy writing. Legal pretraining works at scale.</div>
+            <div><span class="src">Across the literature</span><b>Accountability lags behind deployment</b>Who is the author, who is liable for errors, and where automated decisions should stop are all unresolved.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="gaps">
+          <div class="sec-head"><span class="k">03</span><h2>The gaps</h2></div>
+          <div class="gap2">
+            <div class="bg-soft">
+              <h4>Understudied</h4>
+              <ul>
+                <li>No work on Indian government documents such as office memoranda, D.O. letters and cabinet notes.</li>
+                <li>Whether AI follows procedure and institutional form is untested.</li>
+                <li>No rigorous evidence on LLMs as a tool for building staff capacity.</li>
+                <li>Drafting in multiple Indian languages is unaddressed.</li>
+                <li>Long-term effects are unknown. Do officials gain skill, or lose it?</li>
+              </ul>
+            </div>
+            <div class="ar">→</div>
+            <div class="bg-yellow">
+              <h4>Opportunity</h4>
+              <ul>
+                <li>18 barriers to AI in Indian public systems are documented, but no LLM solutions have been tested.</li>
+                <li>Only one India-focused language tool for governance exists, DigiGram, at the panchayat level.</li>
+                <li>Proven methods are ready to apply: retrieval-augmented generation, domain fine-tuning and a human in the loop.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="corpus">
+          <div class="sec-head"><span class="k">04</span><h2>The corpus</h2></div>
+          <p>Our documents come from the decommissioned SmartNet database of the Ministry of Housing and Urban Affairs, which held material from India's urban missions. We collected 3,609 documents and classified them by type.</p>
+          <div class="bars" id="corpusBars"></div>
+          <p class="disclaimer">Tenders and procurement documents make up a third of the corpus. They are also the most rule-bound, which makes them a strong test.</p>
+        </section>
+
+        <section class="sec" id="method">
+          <div class="sec-head"><span class="k">05</span><h2>The experiment</h2></div>
+          <p>For each real document, we write a short pre-drafting brief: the facts an official would have before starting to write. We give the brief to an LLM, compare its draft with the real document, and score the difference.</p>
+          <div class="steps7">
+            <div><span class="k11">1</span><b>Classify</b>Sort documents by type.</div>
+            <div><span class="k11">2</span><b>Metadata</b>Record authority, purpose, amounts, dates.</div>
+            <div class="bg-yellow"><span class="k11">3</span><b>Briefs</b>Write a pre-drafting brief, in three conditions.</div>
+            <div><span class="k11">4</span><b>Generate</b>Draft each document with the LLM.</div>
+            <div><span class="k11">5</span><b>Score</b>Automatic scoring on six dimensions.</div>
+            <div><span class="k11">6</span><b>Human review</b>Experts rate usability.</div>
+            <div><span class="k11">7</span><b>Analyze</b>Compare conditions and document types.</div>
+          </div>
+          <p>The three conditions test how much the model needs to be told.</p>
+          <div class="three">
+            <div class="card bg-soft"><span class="k11">Condition 1</span><b>Minimal prompt</b>The basic facts and an instruction to write in formal Government of India language.</div>
+            <div class="card bg-soft"><span class="k11">Condition 2</span><b>Structured brief</b>The facts plus the required sections, the real eligibility rules, an instruction not to invent criteria, and a step where the model must ask for missing facts first.</div>
+            <div class="card bg-soft"><span class="k11">Condition 3</span><b>Guided institutional prompt</b>Adds guidance on the institution's own conventions and procedure.</div>
+          </div>
+          <p>Here is an example, a tender to build a non-motorized transport corridor for Jabalpur Smart City Limited.</p>
+          <details class="pd">
+            <summary>Condition 1: minimal prompt</summary>
+            <div class="prompt">You are drafting an official government tender document Request For Proposal. Use the following information to prepare the RFP in formal government of India language.
+
+Document type: Request for Proposal
+Issuing authority: Jabalpur Smart City Limited
+Purpose: Hire a vendor to develop a NMT (non motorised transit) from Bus Stand to Madan Mohan Station
+Location: Jabalpur, Madhya Pradesh
+Budget ceiling: INR 7 crore 43 lakhs
+Submission deadline: 30 days from publication</div>
+          </details>
+          <details class="pd">
+            <summary>Condition 2: structured brief</summary>
+            <div class="prompt">You are drafting an official government tender document Request For Proposal. Use the following information to prepare the RFP in formal government of India language. Before generating the document, ask any missing facts and once you have all the information, then ask if you can generate the document. When I will permit, then generate. Use numbered clauses.
+
+Document type: Request for Proposal
+Issuing authority: Jabalpur Smart City Limited
+Purpose: Hire a vendor to develop a NMT (non motorised transit) from Bus Stand to Madan Mohan Station
+Location: Jabalpur, Madhya Pradesh
+Budget ceiling: INR 7 crore 43 lakhs
+Submission deadline: The online bid submission deadline is 24 February 2017.
+
+Sections in the RFP:
+Section 1: NIT
+Section 2: Instructions to Bidders (ITB), Bid Data Sheet, Annexure A to M
+Section 3: Table of Clauses
+  Part I: General Conditions of Contract (GCC), Contract Data, Annexure N to W
+  Part II: Special Conditions of Contract (SCC)
+Section 4: Bill of Quantities (BOQ)
+Section 5: Agreement Form
+
+Do not invent eligibility criteria. Eligibility criteria are as follows:
+Pre-qualification is required. Special eligibility criteria is not required.
+The bidder must have completed similar works in the last 3 financial years, either:
+Three similar works, each worth at least 20% of the probable contract amount, or
+Two similar works, each worth at least 30% of the probable contract amount, or
+One similar work worth at least 50% of the probable contract amount.</div>
+          </details>
+        </section>
+
+        <section class="sec" id="score">
+          <div class="sec-head"><span class="k">06</span><h2>How we score a draft</h2></div>
+          <p>Most text metrics only check whether the words look similar. A draft can match the reference closely and still carry the wrong amount. So we score six dimensions, from surface to substance.</p>
+          <div class="dims">
+            <div class="bg-gray"><span class="k11">1</span><b>Surface similarity</b>ROUGE-L, BLEU, BERTScore, cosine similarity.</div>
+            <div class="bg-blue"><span class="k11">2</span><b>Structural completeness</b>Are scope, eligibility, evaluation, payment and penalties all there?</div>
+            <div class="bg-yellow"><span class="k11">3</span><b>Factual accuracy</b>Departments, dates, amounts, legal references, designations.</div>
+            <div class="bg-pink"><span class="k11">4</span><b>Legal and procedural compliance</b>A checklist of required legal elements, each scored 0, 1 or 2.</div>
+            <div class="bg-lilac"><span class="k11">5</span><b>Bureaucratic style</b>Passive voice, deontic language ("shall", "must"), nominalizations, clause density.</div>
+            <div class="bg-green"><span class="k11">6</span><b>Human expert rating</b>A 5-point usability scale, judged by people who draft these documents.</div>
+          </div>
+          <h3>The Government Document Quality Score</h3>
+          <p>The automatic dimensions combine into one score, the GDQS. The weights follow the harm an error can do.</p>
+          <div class="formula">GDQS = 0.25 × Factual accuracy + 0.20 × Structural completeness + 0.20 × Legal compliance<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.15 × Semantic similarity + 0.10 × Bureaucratic style + 0.10 × Readability</div>
+          <div class="three">
+            <div class="card bg-yellow"><span class="k11">0.25</span><b>Facts weigh most</b>Errors cause real administrative harm.</div>
+            <div class="card bg-blue"><span class="k11">0.20 each</span><b>Then structure and compliance</b>Templates are rigid. A missing section makes a document unusable.</div>
+            <div class="card bg-soft"><span class="k11">0.15 and 0.10</span><b>Meaning, style, readability</b>Important, but lower risk if wrong.</div>
+          </div>
+          <p>Try it. Move the scores, or load one of two example drafts.</p>
+          <div class="panel wide">
+            <div class="btns"><button type="button" data-preset="fluent">Fluent but wrong</button><button type="button" data-preset="clumsy">Correct but clumsy</button></div>
+            <div class="calc6" id="calc6"></div>
+            <div class="gdq"><span class="k11">GDQS</span><span class="big" id="gdqVal">0</span><span class="meter"><i id="gdqBar"></i></span></div>
+            <span class="disclaimer" id="gdqNote">Each dimension on a 0 to 100 scale. The two example drafts are illustrations, not results.</span>
+          </div>
+          <p>Experts then rate each draft on the scale below, looking at accuracy, completeness, style, clarity, usability and risk of error.</p>
+          <div class="scale">
+            <div class="bg-green"><span class="n">5</span>Ready for official use</div>
+            <div class="bg-green" style="opacity:.8"><span class="n">4</span>Usable after minor editing</div>
+            <div class="bg-yellow"><span class="n">3</span>Usable after substantial editing</div>
+            <div class="bg-pink" style="opacity:.8"><span class="n">2</span>Only after major rewriting</div>
+            <div class="bg-pink"><span class="n">1</span>Not usable</div>
+          </div>
+        </section>
+
+        <section class="sec" id="expect">
+          <div class="sec-head"><span class="k">07</span><h2>What we expect</h2></div>
+          <p>We will compare scores across document types such as tenders, contracts, policy memos, orders and financial documents. Three hypotheses guide the analysis.</p>
+          <div class="three">
+            <div class="card line"><span class="k11">H1</span><b>Compliance is the weakest dimension</b>It is the hardest to get right without grounding in the domain.</div>
+            <div class="card line"><span class="k11">H2</span><b>Policy memos score highest</b>They are closest to the general expository writing LLMs are good at.</div>
+            <div class="card line"><span class="k11">H3</span><b>Financial documents score lowest</b>They pack the most precise facts into the least space.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="pilot">
+          <div class="sec-head"><span class="k">08</span><h2>An early test</h2></div>
+          <p>We ran the Jabalpur tender through a frontier model, Gemini 3.1 Pro, and had the same model score the result against the real document.</p>
+          <div class="pilot">
+            <div class="card line">
+              <div class="row"><span>Factual accuracy</span><span class="dots" data-s="1"></span><span>1/5</span></div>
+              <div class="row"><span>Structure</span><span class="dots" data-s="1"></span><span>1/5</span></div>
+              <div class="row"><span>Compliance</span><span class="dots" data-s="1"></span><span>1/5</span></div>
+              <div class="row"><span>Style</span><span class="dots good" data-s="4"></span><span>4/5</span></div>
+              <div class="row" style="margin:6px 0 0;border-top:1px solid var(--line);padding-top:10px"><b style="color:var(--ink)">Overall</b><span></span><b style="color:var(--ink)">1.8</b></div>
+            </div>
+            <ul>
+              <li>The deposit amount was invented: INR 14,86,000 instead of Rs. 7,42,500.</li>
+              <li>The project scope was wrong: 3.80 km with 2 to 2.5 m tracks, against 1.2 km with 4 m cycle and 4 m pedestrian tracks.</li>
+              <li>The completion period became 18 months instead of 5.</li>
+              <li>The evaluation method changed from lowest bid (L1) to quality and cost based selection.</li>
+              <li>Yet the language was rated highly formal, with correct terms such as "hereinafter referred to as" and "shall be liable".</li>
+            </ul>
+          </div>
+          <div class="pull"><p>The draft looked and sounded like a real tender. It was not one.</p></div>
+          <p>That gap is the reason for this study. Style is the easiest thing for a model to copy and the least important thing for a document to be legitimate. Facts, structure and procedure are what make it valid, and they are exactly where the model failed. Our next steps are to run all three conditions across the corpus and bring in expert reviewers.</p>
+          <a class="next" href="#" data-site-link="write"><span class="l">Back to</span><span class="t">I write →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+
+    var C = [['Tender and procurement', 1174], ['Plans, strategies, proposals', 635], ['Case studies, good practices', 408], ['Reports, assessments', 322], ['Research studies', 274], ['Policy, regulation, guidelines', 269], ['Toolkits and manuals', 123], ['Technical and product profiles', 106], ['Other, needs review', 71], ['Presentations', 62], ['Training material', 49], ['Events and administrative', 44], ['Recruitment notices', 34], ['Competitions and calls', 31], ['News and articles', 7]];
+    document.getElementById('corpusBars').innerHTML = C.map(function (r, i) {
+      return '<div class="row"><span>' + r[0] + '</span><span class="tr"><span class="b" style="width:' + (r[1] / 1174 * 100).toFixed(2) + '%;background:' + (i === 0 ? '#f4a97f' : '#a9c4ec') + '"></span></span><span class="v">' + r[1].toLocaleString('en-US') + '</span></div>';
+    }).join('');
+
+    var D = [['fact', 'Factual accuracy', 0.25], ['struct', 'Structural completeness', 0.20], ['comp', 'Legal compliance', 0.20], ['sem', 'Semantic similarity', 0.15], ['style', 'Bureaucratic style', 0.10], ['read', 'Readability', 0.10]];
+    var P = { fluent: { fact: 20, struct: 20, comp: 20, sem: 70, style: 90, read: 85 }, clumsy: { fact: 95, struct: 90, comp: 90, sem: 75, style: 40, read: 50 } };
+    var box = document.getElementById('calc6');
+    box.innerHTML = D.map(function (d) { return '<label><span>' + d[1] + ' <span class="k11">× ' + d[2].toFixed(2) + '</span></span><span class="v" id="v_' + d[0] + '">50</span><input type="range" min="0" max="100" step="5" value="50" id="s_' + d[0] + '" aria-label="' + d[1] + '"></label>'; }).join('');
+    function calc() {
+      var t = 0;
+      D.forEach(function (d) { var v = +document.getElementById('s_' + d[0]).value; document.getElementById('v_' + d[0]).textContent = v; t += v * d[2]; });
+      document.getElementById('gdqVal').textContent = t.toFixed(0);
+      document.getElementById('gdqBar').style.width = t.toFixed(1) + '%';
+    }
+    D.forEach(function (d) { document.getElementById('s_' + d[0]).addEventListener('input', calc); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (b) {
+      b.addEventListener('click', function () {
+        var p = P[b.dataset.preset];
+        D.forEach(function (d) { document.getElementById('s_' + d[0]).value = p[d[0]]; });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (x) { x.classList.toggle('on', x === b); });
+        calc();
+      });
+    });
+    document.querySelector('[data-preset="fluent"]').click();
+
+    Array.prototype.forEach.call(document.querySelectorAll('.pilot .dots'), function (d) {
+      var s = +d.dataset.s, h = '';
+      for (var i = 1; i <= 5; i++) h += '<i' + (i <= s ? ' class="on"' : '') + '></i>';
+      d.innerHTML = h;
+    });
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['question', 'known', 'gaps', 'corpus', 'method', 'score', 'expect', 'pilot'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>State Capacity Dashboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="The State Capacity Dashboard: a national survey of vacant posts in urban departments, cleaned and turned into a Looker Studio dashboard reported to the Prime Minister's Office.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Samavesh Portal additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* Homepage drawing */
+.mock { border: 1px solid var(--ink); border-radius: 12px; overflow: hidden; background: var(--paper); }
+.mock .chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.mock .chrome i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #b9b9b2; display: inline-block; }
+.mock .chrome span { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mock svg { display: block; width: 100%; height: auto; }
+.mock svg .serif { font-family: Georgia, 'Times New Roman', serif; }
+.mock svg .sans { font-family: var(--font); }
+.mock svg .mono { font-family: var(--mono); }
+
+/* Pipeline */
+.pipe { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
+.st { display: flex; flex-direction: column; gap: 8px; padding-right: 18px; position: relative; min-width: 0; }
+.st:last-child { padding-right: 0; }
+.st .box { flex: 1; border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--ink); min-height: 150px; }
+.st .box b { font-size: 15px; line-height: 1.25; }
+.st .box span { font-size: 12.5px; color: var(--body); line-height: 1.45; }
+.st .who { align-self: flex-start; font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--ink); padding: 0 6px; color: var(--ink); background: var(--paper); }
+.st .out { font-family: var(--mono); font-size: 11px; color: var(--body); line-height: 1.4; }
+.st:not(:last-child) .box::after { content: ""; position: absolute; right: 2px; top: 60px; width: 14px; border-top: 1px solid var(--ink); }
+.st:not(:last-child) .box::before { content: ""; position: absolute; right: 0; top: 56px; border: 4.5px solid transparent; border-left: 6px solid var(--ink); border-right: 0; }
+.pipe-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.pipe-key span { display: inline-flex; align-items: center; gap: 8px; }
+.pipe-key i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--ink); }
+@media (max-width: 900px) {
+  .pipe { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .st { padding: 0; }
+  .st .box { min-height: 0; }
+  .st .box::before, .st .box::after { display: none; }
+}
+@media (max-width: 480px) { .pipe { grid-template-columns: 1fr; } }
+
+/* Tagging */
+.tagmap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 28px; align-items: stretch; }
+.card { border: 1px solid var(--ink); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.card .ph { height: 120px; border-radius: 6px; background: repeating-linear-gradient(135deg, var(--soft) 0 8px, #ececea 8px 9px); }
+.card h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; }
+.card .when { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tags { display: flex; flex-direction: column; gap: 8px; }
+.tg { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.tg .f { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+.tg .v { color: var(--ink); font-weight: 600; }
+.tg .to { font-size: 13px; color: var(--body); }
+.tg .to::before { content: "→ "; color: var(--ink); }
+@media (max-width: 860px) { .tagmap { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .tg { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Site map */
+.map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.map > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.map h4 { font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.01em; }
+.map p { font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.map ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 10px; }
+.map-also { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--body); }
+.map-also span.c { background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+@media (max-width: 760px) { .map { grid-template-columns: 1fr; } }
+
+/* Ways to read */
+.ways { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.ways > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ways .k11 { color: var(--body); }
+.ways b { font-size: 16px; }
+.ways span:last-child { font-size: 13px; color: var(--body); line-height: 1.45; }
+@media (max-width: 900px) { .ways { grid-template-columns: 1fr 1fr; } }
+
+.reader { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.reader > div { border-radius: 10px; padding: 14px; font-size: 13.5px; color: var(--body); line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
+.reader b { color: var(--ink); font-size: 14.5px; }
+@media (max-width: 760px) { .reader { grid-template-columns: 1fr 1fr; } }
+
+/* Ordering */
+.order { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.order > div { border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.order h4 { font-size: 16px; font-weight: 600; }
+.order p { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.dots { display: grid; grid-template-columns: repeat(6, 22px); gap: 6px; }
+.dots i { width: 22px; height: 22px; border-radius: 4px; display: block; border: 1px solid rgba(0,0,0,.25); }
+.dots i.e { background: transparent; border-style: dashed; }
+.manual { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; border: 1px solid var(--ink); border-radius: 12px; padding: 18px 20px; max-width: 760px; }
+.manual .sw { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.manual .sw i { width: 34px; height: 18px; border-radius: 9px; background: var(--ink); position: relative; display: inline-block; }
+.manual .sw i::after { content: ""; position: absolute; right: 3px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); }
+.manual p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+@media (max-width: 760px) { .order { grid-template-columns: 1fr; } .manual { grid-template-columns: 1fr; } }
+
+/* Design process */
+.proc { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+.proc > div:not(.ar) { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.proc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.proc svg { width: 100%; height: auto; display: block; background: var(--paper); border-radius: 6px; }
+.proc .ar { display: grid; place-items: center; font-size: 22px; }
+@media (max-width: 760px) { .proc { grid-template-columns: 1fr; } .proc .ar { transform: rotate(90deg); } }
+
+/* Why it feels clean */
+.clean { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
+.cl { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.cl .n { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 4px; }
+.cl h4 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.cl p { font-size: 14.5px; color: var(--body); line-height: 1.55; }
+.cl .ex { min-width: 0; }
+@media (max-width: 760px) { .cl { grid-template-columns: 28px minmax(0, 1fr); } .cl .ex { grid-column: 2; } }
+.navx { display: flex; gap: 28px; align-items: baseline; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.navx b { font-family: Georgia, serif; font-weight: 400; font-size: 20px; margin-right: auto; }
+.sw5 { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw5 div { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.sw5 i { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.type3 { display: flex; flex-direction: column; gap: 8px; }
+.type3 div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.type3 .k11 { color: var(--muted); }
+.type3 .s1 { font-family: Georgia, serif; font-size: 22px; }
+.type3 .s2 { font-size: 16px; }
+.type3 .s3 { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
+.ul-demo { font-family: Georgia, serif; font-size: 26px; display: flex; flex-direction: column; gap: 6px; }
+.ul-demo span { color: rgba(17,17,17,.4); }
+.ul-demo span.on { color: var(--ink); box-shadow: inset 0 -2px 0 #2496ff; align-self: flex-start; }
+.btns { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 13px; }
+.btns .pill { font-family: Georgia, serif; font-size: 15px; border: 1px solid var(--ink); border-radius: 999px; padding: 5px 16px; }
+.btns .circ { display: inline-flex; align-items: center; gap: 10px; }
+.btns .circ i { width: 26px; height: 26px; border: 1px solid var(--ink); border-radius: 50%; display: inline-grid; place-items: center; font-style: normal; }
+
+/* Editors */
+.cms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cms > div { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.cms b { font-size: 15px; color: var(--ink); }
+.flow { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 1px 8px; background: var(--paper); color: var(--ink); }
+@media (max-width: 760px) { .cms { grid-template-columns: 1fr; } }
+.stack { font-size: 14px; color: var(--body); display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.stack .l { font-size: 13px; color: var(--ink); }
+@media (max-width: 560px) { .stack { grid-template-columns: 1fr; gap: 4px; } }
+
+/* ---------- State Capacity additions ---------- */
+.levers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.levers .gap { border: 1.5px solid var(--ink); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.levers .gap b { font-size: 20px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.25; }
+.levers .gap span { font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.levers .ar { display: grid; place-items: center; font-size: 22px; }
+.levers .lv { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--body); line-height: 1.5; }
+.levers .lv h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.levers .lv .tag { align-self: flex-start; font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); background: var(--paper); }
+.levers .lv.dim { background: var(--soft); color: var(--muted); }
+.levers .lv.dim h4 { color: var(--muted); }
+@media (max-width: 860px) { .levers { grid-template-columns: 1fr; } .levers .ar { transform: rotate(90deg); } }
+
+/* Survey flow */
+.flow3 { display: grid; grid-template-columns: minmax(0, .8fr) auto minmax(0, 1.2fr) auto minmax(0, .8fr) auto minmax(0, .8fr); gap: 10px; align-items: center; }
+.flow3 .ar { font-size: 20px; text-align: center; }
+.node { border: 1px solid var(--ink); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--body); line-height: 1.4; min-width: 0; }
+.node b { font-size: 15px; color: var(--ink); }
+.split2 { display: flex; flex-direction: column; gap: 8px; }
+.split2 .node { flex-direction: row; gap: 10px; align-items: center; }
+.split2 svg { width: 34px; height: 34px; flex: none; }
+.split2 svg * { fill: none; stroke: var(--ink); stroke-width: 1.3; }
+@media (max-width: 900px) { .flow3 { grid-template-columns: 1fr; } .flow3 .ar { transform: rotate(90deg); } }
+
+/* Map of states as a tile grid */
+.tiles { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 4px; max-width: 620px; }
+.tiles i { aspect-ratio: 1; border-radius: 3px; background: var(--blue); border: 1px solid rgba(0,0,0,.2); display: block; }
+.tiles-cap { font-size: 12.5px; color: var(--body); }
+.tiles-cap b { color: var(--ink); }
+
+/* Cleaning */
+.clean2 { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.clean2 .ar { font-size: 22px; text-align: center; }
+.messy, .tidy { border-radius: 12px; overflow: hidden; border: 1px solid var(--ink); }
+.messy .h, .tidy .h { font-family: var(--mono); font-size: 11px; padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.messy table, .tidy table { font-size: 12.5px; }
+.messy td, .tidy td, .messy th, .tidy th { padding: 7px 10px; }
+.messy td:first-child, .tidy td:first-child { font-weight: 400; padding-left: 12px; }
+.messy th:first-child, .tidy th:first-child { padding-left: 12px; }
+.messy td.bad { background: var(--pink); color: var(--ink); }
+.tidy td.ok { background: var(--green); color: var(--ink); }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.steps > div { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.steps b { color: var(--ink); font-size: 15px; }
+@media (max-width: 860px) { .clean2 { grid-template-columns: 1fr; } .clean2 .ar { transform: rotate(90deg); } .steps { grid-template-columns: 1fr 1fr; } }
+
+/* Dashboard drawing */
+.lk { display: grid; grid-template-columns: 170px minmax(0, 1fr); min-height: 380px; }
+.lk .side { border-right: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 12px; color: var(--body); }
+.lk .side .k11 { color: var(--muted); }
+.lk .dd { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; display: flex; justify-content: space-between; color: var(--ink); background: var(--paper); }
+.lk .main { padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.lk .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.lk .cards div { border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--body); }
+.lk .cards i { display: block; height: 16px; width: 60%; border-radius: 4px; background: rgba(0,0,0,.18); }
+.lk .two { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; flex: 1; }
+.lk .panel { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--body); min-width: 0; }
+.lk .bars { display: flex; flex-direction: column; gap: 6px; }
+.lk .bars div { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; align-items: center; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.lk .bars span { height: 12px; border-radius: 0 3px 3px 0; display: flex; overflow: hidden; }
+.lk .bars span b { display: block; height: 100%; }
+.lk .heat { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
+.lk .heat i { aspect-ratio: 1.4; border-radius: 2px; display: block; }
+@media (max-width: 760px) { .lk { grid-template-columns: 1fr; } .lk .side { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; } .lk .two { grid-template-columns: 1fr; } }
+
+.views { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.views > div { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.views b { color: var(--ink); font-size: 15px; }
+.views .q { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+@media (max-width: 760px) { .views { grid-template-columns: 1fr; } }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="build" aria-label="Back to I build"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="build">I build</a> / Products</span>
+    <span class="right">Reported to the Prime Minister's Office</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Product · Case study</span>
+          <h1>State Capacity Dashboard</h1>
+        </div>
+        <div>
+          <p class="lede">India's first survey of vacant posts in urban departments across the country. I gathered the responses, cleaned them and turned them into a dashboard that shows how much capacity the country has, and where it falls short.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Role</span><span class="v">Senior Associate, Product and Data</span></div>
+        <div><span class="l">Organisation</span><span class="v">National Institute of Urban Affairs</span></div>
+        <div><span class="l">For</span><span class="v">Ministry of Housing and Urban Affairs and the Prime Minister's Office</span></div>
+        <div><span class="l">Built with</span><span class="v">Python and Looker Studio</span></div>
+      </div>
+
+      <figure>
+        <div class="mock">
+          <div class="chrome"><i></i><i></i><i></i><span>Looker Studio · State capacity</span></div>
+          <div class="lk" role="img" aria-label="Drawing of the dashboard layout: filters for state, department and post on the left; summary cards, a bar chart by state and a grid by department on the right. No real figures are shown.">
+            <div class="side">
+              <span class="k11">Filters</span>
+              <span class="dd">State <span>▾</span></span>
+              <span class="dd">Department <span>▾</span></span>
+              <span class="dd">Post <span>▾</span></span>
+            </div>
+            <div class="main">
+              <div class="cards">
+                <div class="bg-blue">Sanctioned posts<i></i></div>
+                <div class="bg-green">Filled<i></i></div>
+                <div class="bg-pink">Vacant<i></i></div>
+              </div>
+              <div class="two">
+                <div class="panel">By state
+                  <div class="bars">
+                    <div>State A<span style="width:92%"><b style="width:70%;background:#b9dcc5"></b><b style="width:30%;background:#f4b8cd"></b></span></div>
+                    <div>State B<span style="width:80%"><b style="width:58%;background:#b9dcc5"></b><b style="width:42%;background:#f4b8cd"></b></span></div>
+                    <div>State C<span style="width:66%"><b style="width:76%;background:#b9dcc5"></b><b style="width:24%;background:#f4b8cd"></b></span></div>
+                    <div>State D<span style="width:54%"><b style="width:50%;background:#b9dcc5"></b><b style="width:50%;background:#f4b8cd"></b></span></div>
+                    <div>State E<span style="width:40%"><b style="width:64%;background:#b9dcc5"></b><b style="width:36%;background:#f4b8cd"></b></span></div>
+                  </div>
+                </div>
+                <div class="panel">By department
+                  <div class="heat">
+                    <i style="background:#fbdde8"></i><i style="background:#f4b8cd"></i><i style="background:#fbdde8"></i><i style="background:#f5f5f2"></i><i style="background:#f4b8cd"></i><i style="background:#fbdde8"></i>
+                    <i style="background:#f5f5f2"></i><i style="background:#fbdde8"></i><i style="background:#ef9fbb"></i><i style="background:#fbdde8"></i><i style="background:#f5f5f2"></i><i style="background:#f4b8cd"></i>
+                    <i style="background:#f4b8cd"></i><i style="background:#f5f5f2"></i><i style="background:#fbdde8"></i><i style="background:#ef9fbb"></i><i style="background:#fbdde8"></i><i style="background:#f5f5f2"></i>
+                    <i style="background:#fbdde8"></i><i style="background:#f4b8cd"></i><i style="background:#f5f5f2"></i><i style="background:#fbdde8"></i><i style="background:#ef9fbb"></i><i style="background:#fbdde8"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>The dashboard's layout, drawn for this page. It shows no real figures. A screenshot of the real dashboard will replace it.</figcaption>
+      </figure>
+    </section>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#question"><span>01</span><span>The question</span></a>
+          <a href="#survey"><span>02</span><span>The survey</span></a>
+          <a href="#cleaning"><span>03</span><span>Cleaning the data</span></a>
+          <a href="#dashboard"><span>04</span><span>The dashboard</span></a>
+          <a href="#outcome"><span>05</span><span>Outcome</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="question">
+          <div class="sec-head"><span class="k">01</span><h2>The question</h2></div>
+          <p class="lead2">Does India have enough people in government to deliver what it plans?</p>
+          <p>At the first ever meeting of the Prime Minister with the chief secretaries of every state, one problem stood out. The country does not have enough capacity in government. There are two ways to close that gap: train the people already in service, or hire more people where posts are empty or new ones are needed.</p>
+          <div class="levers">
+            <div class="gap"><b>Not enough capacity in government</b><span>Raised at the first meeting of the Prime Minister with the states' chief secretaries.</span></div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="lv dim"><span class="tag">Lever 1</span><h4>Train the existing workforce</h4>Build the skills of the people already in service.</div>
+            <div class="lv bg-yellow"><span class="tag">Lever 2 · this project</span><h4>Hire where there are gaps</h4>Fill vacant posts and add posts where they are needed. That first needs to know where the vacancies are.</div>
+          </div>
+          <p>No one had a national count of vacant posts in urban departments. Hiring could not be planned without one.</p>
+        </section>
+
+        <section class="sec" id="survey">
+          <div class="sec-head"><span class="k">02</span><h2>The survey</h2></div>
+          <p>The Ministry of Housing and Urban Affairs ran the first ever survey of its kind. Forms went to urban departments across the country. Where a department was online, it got a digital form. Where it was not, a paper form was sent.</p>
+          <div class="flow3">
+            <div class="node bg-soft"><b>Ministry</b>Ministry of Housing and Urban Affairs sends out the survey.</div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="split2">
+              <div class="node bg-blue"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="4" y="7" width="26" height="17" rx="2"/><path d="M11 29 H23 M17 24 V29"/></svg><span><b>Digital form</b><br>Where there is connectivity</span></div>
+              <div class="node bg-yellow"><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M8 4 H22 L27 9 V30 H8 Z"/><path d="M22 4 V9 H27 M12 15 H23 M12 20 H23 M12 25 H19"/></svg><span><b>Paper form</b><br>Everywhere else</span></div>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="node bg-soft"><b>Urban departments</b>Each reports its posts, filled and vacant.</div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="node bg-green"><b>Back to the Ministry</b>Every response, digital and paper, comes to one place.</div>
+          </div>
+          <div class="tiles" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <p class="tiles-cap"><b>28 states</b> covered by the survey.</p>
+        </section>
+
+        <section class="sec" id="cleaning">
+          <div class="sec-head"><span class="k">03</span><h2>Cleaning the data</h2></div>
+          <p>I was responsible for gathering every response and making it usable. Two channels and many departments meant the same thing was often written in different ways. I cleaned the data in Python before any chart was drawn.</p>
+          <div class="clean2">
+            <div class="messy">
+              <div class="h">As it arrived</div>
+              <table>
+                <thead><tr><th>Department</th><th>Post</th><th class="r">Vacant</th></tr></thead>
+                <tbody>
+                  <tr><td>Urban Dev. Dept</td><td>Asst. Engineer</td><td class="r">12</td></tr>
+                  <tr><td class="bad">urban development</td><td class="bad">AE</td><td class="r">12</td></tr>
+                  <tr><td>Municipal Admin</td><td>Town Planner</td><td class="r bad">—</td></tr>
+                  <tr><td>Housing Board</td><td class="bad">Jr Engr (Civil)</td><td class="r bad">four</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="ar" aria-hidden="true">→</div>
+            <div class="tidy">
+              <div class="h">Ready for the dashboard</div>
+              <table>
+                <thead><tr><th>Department</th><th>Post</th><th class="r">Vacant</th></tr></thead>
+                <tbody>
+                  <tr><td>Urban Development</td><td>Assistant Engineer</td><td class="r">12</td></tr>
+                  <tr><td>Municipal Administration</td><td>Town Planner</td><td class="r ok">2</td></tr>
+                  <tr><td>Housing Board</td><td>Junior Engineer</td><td class="r">4</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted)">Made-up rows that show the kinds of problems involved, not real survey data.</p>
+          <div class="steps">
+            <div><b>Gather</b>Bring digital and paper responses into one table.</div>
+            <div><b>Standardize</b>One name for each department and each post.</div>
+            <div><b>Check</b>Remove duplicates and follow up on missing or odd numbers.</div>
+            <div><b>Shape</b>Arrange the data by state, department and post.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="dashboard">
+          <div class="sec-head"><span class="k">04</span><h2>The dashboard</h2></div>
+          <p>I built the dashboard in Looker Studio. It answers one question at three levels: how much capacity there is, and where it falls short.</p>
+          <div class="views">
+            <div class="bg-blue"><span class="q">Country</span><b>The national picture</b>Posts, filled and vacant, for the whole country at a glance.</div>
+            <div class="bg-green"><span class="q">State</span><b>Where the gaps are</b>Each state side by side, so the largest shortfalls stand out.</div>
+            <div class="bg-pink"><span class="q">Department and post</span><b>What to hire for</b>The kinds of posts that sit empty, which is what a hiring plan needs.</div>
+          </div>
+          <p>Filters for state, department and post let a reader move from the country down to a single kind of post without leaving the page.</p>
+        </section>
+
+        <section class="sec" id="outcome">
+          <div class="sec-head"><span class="k">05</span><h2>Outcome</h2></div>
+          <p>The findings were reported to the Prime Minister's Office. For the first time, the government had a national view of vacant posts in urban departments, built from the departments' own responses.</p>
+          <div class="keys">
+            <div class="key bg-blue"><span class="v num">1st</span><span class="l">national survey of its kind</span></div>
+            <div class="key bg-green"><span class="v num">28</span><span class="l">states covered</span></div>
+            <div class="key bg-yellow"><span class="v">2</span><span class="l">channels: digital and paper forms</span></div>
+            <div class="key bg-pink"><span class="v">PMO</span><span class="l">where the findings were reported</span></div>
+          </div>
+          <div class="stack"><span class="l">Built with</span><span>Survey design · Python · Google Looker Studio</span></div>
+          <a class="next" href="#" data-site-link="build"><span class="l">Back to</span><span class="t">I build →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['question', 'survey', 'cleaning', 'dashboard', 'outcome'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

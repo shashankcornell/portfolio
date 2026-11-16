@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inverted Pendulum and Unicycle Models</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mathematical modeling of the inverted pendulum and the unicycle: equations of motion, state space, linearization and feedback control. Inceptum 2016, second prize. By Shashank Mishra and Vishal Singh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Pendulum additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.hero h1 { font-size: clamp(40px, 6vw, 76px); line-height: 1.02; }
+.hero h1 em { background: linear-gradient(transparent 24%, var(--yellow) 24%); }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.epi .abstract { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.epi .abstract p { font-size: 16px; color: var(--body); line-height: 1.6; font-weight: 400; letter-spacing: 0; }
+.epi .orig { font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.5; text-align: left; margin-top: 10px; color: var(--muted); max-width: 720px; }
+.epi .orig b { color: var(--ink); font-weight: 500; }
+
+.art { display: block; width: 100%; height: auto; }
+.art text { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.art .m { fill: var(--muted); }
+.scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 600px) { .scrollx .art { min-width: 620px; } #heroArt { display: none; } .scrollnote { display: block !important; } }
+.scrollnote { display: none; font-size: 12px; color: var(--muted); }
+
+.two, .three, .four { display: grid; gap: 12px; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.card { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.card b { color: var(--ink); font-size: 15px; }
+.card.line { border: 1px solid var(--ink); }
+.card .v { font-size: 30px; font-weight: 300; letter-spacing: -0.03em; color: var(--ink); line-height: 1.05; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .three { grid-template-columns: 1fr; } .four { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 4px 11px; background: var(--paper); color: var(--ink); }
+.flow span.hot { background: var(--pink); }
+.flow i { font-style: normal; color: var(--muted); }
+.mode { display: flex; flex-direction: column; gap: 10px; border-radius: 12px; padding: 16px; }
+.mode h4 { font-size: 16px; font-weight: 600; }
+.mode p { font-size: 13.5px; color: var(--body); }
+
+.calc { font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--soft); border-radius: 10px; padding: 14px 16px; line-height: 1.75; max-width: 720px; overflow-x: auto; white-space: nowrap; }
+.calc .c { color: var(--muted); }
+
+/* Interactive panels */
+.panel { border: 1px solid var(--ink); border-radius: 12px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: center; }
+.panel svg { width: 100%; max-width: 320px; height: auto; display: block; justify-self: center; }
+.panel .side { display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--body); min-width: 0; }
+.panel .big { font-size: 44px; font-weight: 300; letter-spacing: -0.04em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.panel .big small { font-size: 16px; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+.panel input[type=range] { width: 100%; accent-color: #111; }
+.panel .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: -6px; }
+.panel .tag { align-self: flex-start; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+.panel.wide { grid-template-columns: 1fr; }
+.outs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.outs > div { background: var(--soft); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.outs .l { font-size: 11.5px; color: var(--muted); }
+.outs .n { font-size: 22px; font-weight: 300; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.outs .n small { font-size: 12px; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.outs > div.hl { background: var(--yellow); }
+@media (max-width: 680px) { .panel { grid-template-columns: 1fr; } .outs { grid-template-columns: 1fr 1fr; } }
+
+/* Bars */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bars .row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 84px; gap: 12px; align-items: center; font-size: 13px; color: var(--body); }
+.bars .tr { height: 18px; position: relative; }
+.bars .b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+.bars .rng { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.18) 0 3px, transparent 3px 7px); }
+.bars .v { font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
+@media (max-width: 560px) { .bars .row { grid-template-columns: 96px minmax(0, 1fr) 70px; gap: 8px; font-size: 12px; } }
+
+.rules { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); max-width: 720px; }
+.rules b { color: var(--ink); }
+
+.risk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.risk > div { border: 1px dashed var(--ink); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.risk b { color: var(--ink); font-size: 15px; }
+@media (max-width: 760px) { .risk { grid-template-columns: 1fr; } }
+
+details.more2 { border-top: 1px solid var(--line); padding-top: 12px; }
+details.more2 summary { cursor: pointer; font-size: 14px; color: var(--ink); }
+.spec { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.spec td { border-bottom: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--body); }
+.spec td:first-child { color: var(--muted); width: 38%; }
+details.more2 ol { margin: 12px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--body); line-height: 1.45; }
+.d, .dd { position: relative; display: inline-block; font-style: normal; }
+.d::before, .dd::before { position: absolute; left: 50%; top: -0.08em; transform: translateX(-50%); font-size: .9em; line-height: 1; }
+.d::before { content: "\02D9"; }
+.dd::before { content: "\00A8"; }
+.eqs { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 760px; overflow-x: auto; }
+.eq { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: 19px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 600px) { .eq { grid-template-columns: max-content auto; font-size: 16px; } .eqs { padding: 14px; } .sim svg text { font-size: 20px; } }
+.eq .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.eq .lbl { display: block; font-family: var(--font); font-size: 12px; color: var(--muted); margin-bottom: 4px; white-space: normal; }
+.fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .85em; line-height: 1.2; margin: 0 2px; }
+.fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.mat { display: inline-grid; vertical-align: middle; border-left: 1.5px solid currentColor; border-right: 1.5px solid currentColor; border-radius: 6px; padding: 2px 8px; column-gap: 16px; row-gap: 4px; text-align: center; margin: 0 4px; font-size: .9em; }
+.mat.c4 { grid-template-columns: repeat(4, auto); }
+.mat.c2 { grid-template-columns: repeat(2, auto); }
+.mat.c1 { grid-template-columns: auto; }
+.mat .hot { background: var(--yellow); border-radius: 4px; padding: 0 3px; }
+.vars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 18px; font-size: 13.5px; color: var(--body); max-width: 760px; }
+.vars span b { font-family: 'Times New Roman', Times, serif; font-size: 16px; color: var(--ink); font-weight: 400; font-style: italic; margin-right: 6px; }
+@media (max-width: 640px) { .vars { grid-template-columns: 1fr 1fr; } }
+.sim { border: 1px solid var(--ink); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sim svg { width: 100%; height: auto; display: block; background: var(--soft); border-radius: 8px; }
+.sim svg text { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btns button { font: inherit; font-size: 13px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.btns button.on { background: var(--ink); color: var(--paper); }
+.btns .st { margin-left: auto; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 13.5px; max-width: 860px; }
+.cmp th { text-align: left; font-weight: 600; color: var(--ink); padding: 8px 10px 8px 0; border-bottom: 1px solid var(--ink); }
+.cmp td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); color: var(--body); vertical-align: top; }
+.cmp td:first-child { color: var(--muted); width: 22%; }
+details.more2 ol { margin: 12px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--body); line-height: 1.45; }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="write" aria-label="Back to I write"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="write">I write</a> / Technology</span>
+    <span class="right">Technical note, 2016</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Technical note · Dynamics and control</span>
+          <h1>Modeling the Inverted Pendulum and the <em>Unicycle</em></h1>
+        </div>
+        <div>
+          <p class="lede">Two classic problems in control and robotics. One cannot stay upright on its own. The other cannot move sideways. Their equations show exactly why, and what a controller has to do about it.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Authors</span><span class="v">Shashank Mishra and Vishal Singh</span></div>
+        <div><span class="l">Presented at</span><span class="v">Technical Symposium, Inceptum 2016, GBPEC Delhi</span></div>
+        <div><span class="l">Award</span><span class="v">Second prize</span></div>
+        <div><span class="l">This version</span><span class="v">Technical note reconstructed from the presentation</span></div>
+      </div>
+    </section>
+
+    <div class="epi">
+      <div class="abstract">
+        <span class="k11">Abstract</span>
+        <p>This note reconstructs the core mathematics of a presentation at the technical symposium of Inceptum 2016 at GBPEC Delhi. It covers two classical problems. The inverted pendulum is an unstable, nonlinear, underactuated system used to study balance and feedback control. The unicycle is a nonholonomic mobile robot whose motion is constrained by rolling without sideways slip. For both, the note presents the modeling assumptions, governing equations, state-space form, linearization and control interpretation.</p>
+      </div>
+      <p class="orig">Original title: <b>Mathematical Modelling of Inverted Pendulum and Unicycle Systems</b></p>
+    </div>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#intro"><span>01</span><span>Two classic problems</span></a>
+          <a href="#cart"><span>02</span><span>The cart and pendulum</span></a>
+          <a href="#motion"><span>03</span><span>Equations of motion</span></a>
+          <a href="#linear"><span>04</span><span>State space and linearization</span></a>
+          <a href="#balance"><span>05</span><span>Balancing it</span></a>
+          <a href="#uni"><span>06</span><span>The unicycle</span></a>
+          <a href="#track"><span>07</span><span>Tracking a path</span></a>
+          <a href="#compare"><span>08</span><span>Two models, two lessons</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="intro">
+          <div class="sec-head"><span class="k">01</span><h2>Two classic problems</h2></div>
+          <p class="lead2">Many real machines are nonlinear, have fewer controls than ways to move, and are bound by rules about how they can move. Two small models capture all of this.</p>
+          <div class="two">
+            <div class="card bg-yellow"><span class="k11">Dynamics</span><b>The inverted pendulum</b>A normal pendulum hangs down and is stable. Flip it upright and the smallest push makes it fall, unless a controller keeps catching it. It is the standard test for balance control, used to think about rockets, robots and self-balancing vehicles.</div>
+            <div class="card bg-blue"><span class="k11">Kinematics</span><b>The unicycle</b>A vehicle that can drive forward and turn, but cannot slide sideways. It is the standard abstraction for wheeled mobile robots and differential-drive robots, and the starting point for navigation and path tracking.</div>
+          </div>
+          <p>The aim of the presentation was to show how each system becomes a set of equations, and how those equations reveal the control problem hidden inside.</p>
+        </section>
+
+        <section class="sec" id="cart">
+          <div class="sec-head"><span class="k">02</span><h2>The cart and pendulum</h2></div>
+          <p>A cart moves along a track. A pendulum is pinned to it at a pivot. The only control is a horizontal force F on the cart. The goal is to keep the pendulum upright while also controlling where the cart is.</p>
+          <figure>
+            <div class="scrollx"><svg class="art" id="cartArt" viewBox="0 0 760 300" role="img" aria-label="Diagram of a cart on a track with a pendulum pinned to it, tilted by angle theta from vertical, with force F pushing the cart"></svg></div>
+            <figcaption>The cart-pendulum system. θ is measured from the upright position.</figcaption>
+          </figure>
+          <div class="vars">
+            <span><b>x</b>cart position</span>
+            <span><b>θ</b>angle from upright</span>
+            <span><b>F</b>force on the cart</span>
+            <span><b>M</b>cart mass</span>
+            <span><b>m</b>pendulum mass</span>
+            <span><b>l</b>pivot to center of mass</span>
+            <span><b>I</b>pendulum inertia about its center of mass</span>
+            <span><b>b</b>cart friction coefficient</span>
+            <span><b>g</b>gravity</span>
+          </div>
+          <div class="two">
+            <div class="card bg-soft"><b>Nonlinear</b>The pendulum's motion involves sin θ and cos θ, so the equations are not straight lines.</div>
+            <div class="card bg-soft"><b>Underactuated</b>One input, the force F, has to manage two motions: the cart sliding and the pendulum rotating.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="motion">
+          <div class="sec-head"><span class="k">03</span><h2>Equations of motion</h2></div>
+          <p>Newton's laws, or the Euler-Lagrange method, give two coupled equations.</p>
+          <div class="eqs">
+            <div class="eq"><span><span class="lbl">Horizontal force balance of the cart and pendulum</span>(M + m)ẍ + bẋ + ml<i class="dd">θ</i> cos θ − ml<i class="d">θ</i>² sin θ = F</span><span class="n">(1)</span></div>
+            <div class="eq"><span><span class="lbl">Rotation of the pendulum about the pivot</span>(I + ml²)<i class="dd">θ</i> − mgl sin θ = −mlẍ cos θ</span><span class="n">(2)</span></div>
+          </div>
+          <p>The two motions are tied together. Accelerating the cart (ẍ) appears in the pendulum's equation, and the pendulum's swing (<i class="dd">θ</i> and <i class="d">θ</i>²) appears in the cart's. That coupling is the whole trick of balancing: the only way to move the pendulum is to move the cart.</p>
+        </section>
+
+        <section class="sec" id="linear">
+          <div class="sec-head"><span class="k">04</span><h2>State space and linearization</h2></div>
+          <p>Four numbers describe the system at any instant: two positions and two velocities. Stacked together, they form the state.</p>
+          <div class="eqs">
+            <div class="eq"><span><span class="lbl">State vector and the general nonlinear form</span>z = <span class="mat c1"><span>x</span><span>ẋ</span><span>θ</span><span><i class="d">θ</i></span></span> ,  ż = f(z, F)</span><span class="n">(3, 4)</span></div>
+          </div>
+          <p>Near the upright position (θ = 0, <i class="d">θ</i> = 0, ẋ = 0) the angle stays small, so three approximations hold: sin θ ≈ θ, cos θ ≈ 1 and <i class="d">θ</i>² ≈ 0. The equations become linear.</p>
+          <div class="eqs">
+            <div class="eq"><span>(M + m)ẍ + bẋ + ml<i class="dd">θ</i> = F</span><span class="n">(7)</span></div>
+            <div class="eq"><span>(I + ml²)<i class="dd">θ</i> − mglθ = −mlẍ</span><span class="n">(8)</span></div>
+            <div class="eq"><span><span class="lbl">With p = (M + m)(I + ml²) − m²l², the linear state-space form ż = Az + BF has</span>A = <span class="mat c4"><span>0</span><span>1</span><span>0</span><span>0</span><span>0</span><span>−(I+ml²)b/p</span><span>−m²gl²/p</span><span>0</span><span>0</span><span>0</span><span>0</span><span>1</span><span>0</span><span>mlb/p</span><span class="hot">(M+m)mgl/p</span><span>0</span></span>  B = <span class="mat c1"><span>0</span><span>(I+ml²)/p</span><span>0</span><span>−ml/p</span></span></span><span class="n">(10–12)</span></div>
+          </div>
+          <p>The highlighted term is the instability, written as a number. In the equation for <i class="dd">θ</i> it is positive: the more the pendulum leans, the faster it accelerates into the lean. Any small tilt grows on its own unless a force acts.</p>
+        </section>
+
+        <section class="sec" id="balance">
+          <div class="sec-head"><span class="k">05</span><h2>Balancing it</h2></div>
+          <p>The goal is θ → 0, and if needed x → x<sub>desired</sub>. A common approach is state feedback: measure all four states and push the cart in proportion to them.</p>
+          <div class="eqs">
+            <div class="eq"><span>F = −Kz  ⟹  ż = (A − BK)z</span><span class="n">(15, 16)</span></div>
+          </div>
+          <p>Choosing the gain matrix K moves the eigenvalues of A − BK into the stable region, the left half of the complex plane. In plain terms, the controller drives the cart under the pendulum to catch it as it starts to fall. Try it below. Nudge the pendulum, then switch the controller off.</p>
+          <div class="sim">
+            <svg id="pendSvg" viewBox="0 0 700 280" role="img" aria-label="Live simulation of the cart and pendulum"></svg>
+            <div class="btns">
+              <button type="button" id="pLeft">Nudge left</button>
+              <button type="button" id="pRight">Nudge right</button>
+              <button type="button" id="pCtl" class="on">Controller on</button>
+              <button type="button" id="pReset">Reset</button>
+              <span class="st bg-green" id="pState">Balanced</span>
+            </div>
+            <div class="outs" id="pOuts"></div>
+            <span class="disclaimer">A live simulation of the full nonlinear equations (1) and (2), added for this page. The paper gives no numbers, so it uses example values: M = 0.5 kg, m = 0.2 kg, l = 0.3 m, I = 0.006 kg·m², b = 0.1 N·s/m. K = [−4.71, −5.80, −31.96, −6.13], from pole placement at −2, −2.5, −6 and −7. Force limited to ±20 N.</span>
+          </div>
+        </section>
+
+        <section class="sec" id="uni">
+          <div class="sec-head"><span class="k">06</span><h2>The unicycle</h2></div>
+          <p>The unicycle lives on a flat plane. Its configuration is its position and heading, q = (x, y, θ). It has two controls: forward speed v and turning rate ω.</p>
+          <div class="eqs">
+            <div class="eq"><span><span class="lbl">Kinematics</span>ẋ = v cos θ ,  ẏ = v sin θ ,  <i class="d">θ</i> = ω</span><span class="n">(18–20)</span></div>
+            <div class="eq"><span><span class="lbl">Compact form</span>q̇ = <span class="mat c2"><span>cos θ</span><span>0</span><span>sin θ</span><span>0</span><span>0</span><span>1</span></span><span class="mat c1"><span>v</span><span>ω</span></span></span><span class="n">(21)</span></div>
+            <div class="eq"><span><span class="lbl">No sideways slip</span>−ẋ sin θ + ẏ cos θ = 0</span><span class="n">(22)</span></div>
+          </div>
+          <figure>
+            <div class="scrollx"><svg class="art" id="uniArt" viewBox="0 0 760 260" role="img" aria-label="A unicycle robot can move forward along its heading, but cannot move sideways; a parallel-parking style maneuver reaches a sideways position"></svg></div>
+            <figcaption>It cannot step sideways, but it can still get there by driving and turning.</figcaption>
+          </figure>
+          <p>Substituting the kinematics into the constraint gives −v sin θ cos θ + v cos θ sin θ = 0, so the model never slips sideways. The constraint is on velocity, and it cannot be integrated into a rule about position alone. That is what nonholonomic means. The robot can still reach any position and heading on the plane. It just has to combine forward motion and turning to get there, as anyone who has parallel parked knows.</p>
+        </section>
+
+        <section class="sec" id="track">
+          <div class="sec-head"><span class="k">07</span><h2>Tracking a path</h2></div>
+          <p>To follow a reference path q<sub>r</sub> = (x<sub>r</sub>, y<sub>r</sub>, θ<sub>r</sub>) moving at v<sub>r</sub> and ω<sub>r</sub>, measure the error in the robot's own frame: how far ahead (e<sub>x</sub>), how far to the side (e<sub>y</sub>), and how far off in heading (e<sub>θ</sub>).</p>
+          <div class="eqs">
+            <div class="eq"><span><span class="lbl">Error in the robot's frame</span><span class="mat c1"><span>e<sub>x</sub></span><span>e<sub>y</sub></span><span>e<sub>θ</sub></span></span> = <span class="mat c4" style="grid-template-columns:repeat(3,auto)"><span>cos θ</span><span>sin θ</span><span>0</span><span>−sin θ</span><span>cos θ</span><span>0</span><span>0</span><span>0</span><span>1</span></span><span class="mat c1"><span>x<sub>r</sub> − x</span><span>y<sub>r</sub> − y</span><span>θ<sub>r</sub> − θ</span></span></span><span class="n">(25)</span></div>
+            <div class="eq"><span><span class="lbl">Feedback law, with positive gains k<sub>x</sub>, k<sub>y</sub>, k<sub>θ</sub></span>v = v<sub>r</sub> cos e<sub>θ</sub> + k<sub>x</sub>e<sub>x</sub> ,  ω = ω<sub>r</sub> + k<sub>y</sub>v<sub>r</sub>e<sub>y</sub> + k<sub>θ</sub> sin e<sub>θ</sub></span><span class="n">(26, 27)</span></div>
+          </div>
+          <p>The forward error is fixed directly by speeding up or slowing down. The sideways error cannot be fixed directly, so it goes into the turning rate instead: the robot turns toward the path, then its forward motion closes the gap. Watch it below.</p>
+          <div class="sim">
+            <svg id="uniSvg" viewBox="0 0 700 340" role="img" aria-label="Live simulation of a unicycle robot tracking a moving point on a circle"></svg>
+            <div class="btns">
+              <button type="button" id="uNew">New start</button>
+              <button type="button" id="uCtl" class="on">Feedback on</button>
+              <span class="st bg-blue" id="uState">Tracking</span>
+            </div>
+            <div class="outs" id="uOuts"></div>
+            <span class="disclaimer">A live simulation of equations (18) to (27), added for this page. Reference: a point moving on a 1.5 m circle at v<sub>r</sub> = 0.5 m/s. Example gains k<sub>x</sub> = 1, k<sub>y</sub> = 6, k<sub>θ</sub> = 2. With feedback off, the robot just copies v<sub>r</sub> and ω<sub>r</sub> and never closes the gap.</span>
+          </div>
+        </section>
+
+        <section class="sec" id="compare">
+          <div class="sec-head"><span class="k">08</span><h2>Two models, two lessons</h2></div>
+          <table class="cmp">
+            <thead><tr><th></th><th>Inverted pendulum</th><th>Unicycle</th></tr></thead>
+            <tbody>
+              <tr><td>Kind of model</td><td>Dynamic: forces, acceleration, gravity</td><td>Kinematic: position, heading, velocity</td></tr>
+              <tr><td>Core difficulty</td><td>Unstable equilibrium</td><td>Nonholonomic constraint</td></tr>
+              <tr><td>Inputs vs. motions</td><td>One force for two motions</td><td>Two inputs for three coordinates</td></tr>
+              <tr><td>Key step</td><td>Linearize near upright, then state feedback</td><td>Error in the robot's frame, then steer</td></tr>
+              <tr><td>Lesson</td><td>Some systems need active feedback just to exist</td><td>Some motions need planning, not just pushing</td></tr>
+            </tbody>
+          </table>
+          <p>Both show the same habit of mind. Turn a physical system into equations, and the equations tell you what the controller has to do. The pendulum shows nonlinear dynamics, an unstable equilibrium, linearization and state-space control. The unicycle shows nonholonomic kinematics, motion constraints and trajectory tracking. Together they are foundational ideas in control systems and robotics.</p>
+          <details class="more2">
+            <summary>References (4)</summary>
+            <ol>
+              <li>Ogata, K. Modern Control Engineering. Prentice Hall.</li>
+              <li>Spong, M. W., Hutchinson, S., &amp; Vidyasagar, M. Robot Modeling and Control. Wiley.</li>
+              <li>Siciliano, B., Sciavicco, L., Villani, L., &amp; Oriolo, G. Robotics: Modelling, Planning and Control. Springer.</li>
+              <li>Khalil, H. K. Nonlinear Systems. Prentice Hall.</li>
+            </ol>
+          </details>
+          <a class="next" href="#" data-site-link="write"><span class="l">Back to</span><span class="t">I write →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var NS = 'http://www.w3.org/2000/svg', INK = '#111';
+    function el(tag, attrs, parent, text) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      if (text != null) e.textContent = text;
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var visible = {};
+    if ('IntersectionObserver' in window) {
+      var vo = new IntersectionObserver(function (es) { es.forEach(function (e) { visible[e.target.id] = e.isIntersecting; }); });
+      ['pendSvg', 'uniSvg'].forEach(function (id) { vo.observe(document.getElementById(id)); });
+    } else { visible.pendSvg = visible.uniSvg = true; }
+
+    /* ---------- Cart diagram ---------- */
+    (function () {
+      var s = document.getElementById('cartArt');
+      el('line', { x1: 60, y1: 262.5, x2: 700, y2: 262.5, stroke: INK, 'stroke-width': 1.5 }, s);
+      for (var i = 70; i < 700; i += 18) el('line', { x1: i, y1: 263, x2: i - 10, y2: 275, stroke: '#76766f' }, s);
+      var cx = 380, top = 196;
+      el('rect', { x: cx - 70, y: top, width: 140, height: 46, rx: 6, fill: '#d9e8ff', stroke: INK, 'stroke-width': 1.5 }, s);
+      [cx - 40, cx + 40].forEach(function (w) { el('circle', { cx: w, cy: 251, r: 11, fill: '#fff', stroke: INK, 'stroke-width': 1.5 }, s); });
+      el('text', { x: cx, y: top + 28, 'text-anchor': 'middle' }, s, 'M');
+      var th = 0.38, L = 160, px = cx, py = top;
+      var ex = px + L * Math.sin(th), ey = py - L * Math.cos(th);
+      el('line', { x1: px, y1: py, x2: px, y2: py - L - 10, stroke: '#76766f', 'stroke-dasharray': '4 4' }, s);
+      el('line', { x1: px, y1: py, x2: ex, y2: ey, stroke: INK, 'stroke-width': 5, 'stroke-linecap': 'round' }, s);
+      el('circle', { cx: px + L * 0.6 * Math.sin(th), cy: py - L * 0.6 * Math.cos(th), r: 9, fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('circle', { cx: px, cy: py, r: 5, fill: INK }, s);
+      el('path', { d: 'M' + px + ' ' + (py - 70) + ' A 70 70 0 0 1 ' + (px + 70 * Math.sin(th)) + ' ' + (py - 70 * Math.cos(th)), fill: 'none', stroke: INK }, s);
+      el('text', { x: px + 16, y: py - 76, style: 'fill:#111;font-family:Times New Roman,serif;font-size:18px;font-style:italic' }, s, 'θ');
+      el('text', { x: px + L * 0.6 * Math.sin(th) + 16, y: py - L * 0.6 * Math.cos(th) + 4, style: 'fill:#111;font-family:Times New Roman,serif;font-size:17px;font-style:italic' }, s, 'm, I');
+      el('text', { x: px + 46, y: py - 40, style: 'fill:#111;font-family:Times New Roman,serif;font-size:17px;font-style:italic' }, s, 'l');
+      el('path', { d: 'M' + (cx - 160) + ' ' + (top + 23) + ' L' + (cx - 76) + ' ' + (top + 23) + ' M' + (cx - 88) + ' ' + (top + 15) + ' L' + (cx - 74) + ' ' + (top + 23) + ' L' + (cx - 88) + ' ' + (top + 31), fill: 'none', stroke: '#e0855a', 'stroke-width': 2.5 }, s);
+      el('text', { x: cx - 170, y: top + 28, 'text-anchor': 'end', style: 'fill:#111;font-family:Times New Roman,serif;font-size:18px;font-style:italic' }, s, 'F');
+      el('path', { d: 'M100 288 L' + (cx - 70) + ' 288', stroke: '#76766f' }, s);
+      el('path', { d: 'M' + (cx - 82) + ' 283 L' + (cx - 70) + ' 288 L' + (cx - 82) + ' 293', fill: 'none', stroke: '#76766f' }, s);
+      el('text', { x: 230, y: 284, 'text-anchor': 'middle', style: 'fill:#111;font-family:Times New Roman,serif;font-size:17px;font-style:italic' }, s, 'x');
+      el('text', { x: 690, y: 254, 'text-anchor': 'end' }, s, 'friction b');
+      el('path', { d: 'M640 40 L640 90 M633 80 L640 92 L647 80', fill: 'none', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('text', { x: 654, y: 70, style: 'fill:#111;font-family:Times New Roman,serif;font-size:17px;font-style:italic' }, s, 'g');
+    })();
+
+    /* ---------- Pendulum simulation ---------- */
+    var P = { M: 0.5, m: 0.2, b: 0.1, l: 0.3, I: 0.006, g: 9.81 };
+    var K = [-4.709, -5.796, -31.961, -6.128];
+    var z = [0, 0, 0.12, 0], ctl = true, lastF = 0;
+    function deriv(s, F) {
+      var x = s[0], xd = s[1], t = s[2], td = s[3], sn = Math.sin(t), cs = Math.cos(t);
+      var a11 = P.M + P.m, a12 = P.m * P.l * cs, a22 = P.I + P.m * P.l * P.l;
+      var r1 = F - P.b * xd + P.m * P.l * td * td * sn, r2 = P.m * P.g * P.l * sn;
+      var det = a11 * a22 - a12 * a12;
+      return [xd, (r1 * a22 - a12 * r2) / det, td, (a11 * r2 - a12 * r1) / det];
+    }
+    function stepP(dt) {
+      var F = 0;
+      var tw = Math.atan2(Math.sin(z[2]), Math.cos(z[2]));
+      if (ctl && Math.abs(tw) < 1.2) { F = -(K[0] * z[0] + K[1] * z[1] + K[2] * tw + K[3] * z[3]); F = Math.max(-20, Math.min(20, F)); }
+      var k1 = deriv(z, F), z2 = z.map(function (v, i) { return v + dt / 2 * k1[i]; }), k2 = deriv(z2, F), z3 = z.map(function (v, i) { return v + dt / 2 * k2[i]; }), k3 = deriv(z3, F), z4 = z.map(function (v, i) { return v + dt * k3[i]; }), k4 = deriv(z4, F);
+      z = z.map(function (v, i) { return v + dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]); });
+      if (z[0] > 1.35) { z[0] = 1.35; z[1] = Math.min(0, z[1]); }
+      if (z[0] < -1.35) { z[0] = -1.35; z[1] = Math.max(0, z[1]); }
+      lastF = F;
+    }
+    var ps = document.getElementById('pendSvg');
+    var sc = 230, ground = 236;
+    el('line', { x1: 20, y1: ground + 0.5, x2: 680, y2: ground + 0.5, stroke: INK }, ps);
+    for (var mk = -1; mk <= 1; mk += 0.5) { el('line', { x1: 350 + mk * sc, y1: ground, x2: 350 + mk * sc, y2: ground + 6, stroke: '#76766f' }, ps); el('text', { x: 350 + mk * sc, y: ground + 22, 'text-anchor': 'middle' }, ps, (mk > 0 ? '+' : '') + mk + ' m'); }
+    var gCart = el('g', {}, ps);
+    el('rect', { x: -40, y: -30, width: 80, height: 26, rx: 5, fill: '#d9e8ff', stroke: INK, 'stroke-width': 1.5 }, gCart);
+    el('circle', { cx: -22, cy: -4, r: 6, fill: '#fff', stroke: INK }, gCart);
+    el('circle', { cx: 22, cy: -4, r: 6, fill: '#fff', stroke: INK }, gCart);
+    var rod = el('line', { x1: 0, y1: -30, x2: 0, y2: -170, stroke: INK, 'stroke-width': 5, 'stroke-linecap': 'round' }, gCart);
+    var bob = el('circle', { cx: 0, cy: -130, r: 10, fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, gCart);
+    el('circle', { cx: 0, cy: -30, r: 4, fill: INK }, gCart);
+    var fArrow = el('path', { d: '', fill: 'none', stroke: '#e0855a', 'stroke-width': 3 }, gCart);
+    function drawP() {
+      var X = 350 + z[0] * sc, Lp = 140, t = z[2];
+      gCart.setAttribute('transform', 'translate(' + X + ' ' + ground + ')');
+      var ex = Lp * Math.sin(t), ey = -30 - Lp * Math.cos(t);
+      rod.setAttribute('x2', ex); rod.setAttribute('y2', ey);
+      bob.setAttribute('cx', 0.6 * ex * 1); bob.setAttribute('cy', -30 + 0.6 * (ey + 30));
+      var fl = lastF * 3;
+      if (Math.abs(fl) > 2) { var sgn = fl > 0 ? 1 : -1, x0 = -sgn * 44, x1 = x0 - fl; fArrow.setAttribute('d', 'M' + x1 + ' -17 L' + x0 + ' -17 M' + (x0 - sgn * 8) + ' -23 L' + x0 + ' -17 L' + (x0 - sgn * 8) + ' -11'); }
+      else fArrow.setAttribute('d', '');
+      var tw = Math.atan2(Math.sin(t), Math.cos(t)), deg = tw * 180 / Math.PI;
+      var st = document.getElementById('pState');
+      if (Math.abs(deg) < 2) { st.textContent = 'Balanced'; st.className = 'st bg-green'; }
+      else if (Math.abs(deg) < 60 && ctl) { st.textContent = 'Catching it'; st.className = 'st bg-yellow'; }
+      else { st.textContent = ctl ? 'Too far to recover' : 'Falling'; st.className = 'st bg-pink'; }
+      var o = [['Angle θ', deg.toFixed(1), '°', Math.abs(deg) > 2], ['Cart position x', z[0].toFixed(2), 'm'], ['Force F', lastF.toFixed(1), 'N']];
+      document.getElementById('pOuts').innerHTML = o.map(function (x) { return '<div' + (x[3] ? ' class="hl"' : '') + '><span class="l">' + x[0] + '</span><span class="n">' + x[1] + '<small>' + x[2] + '</small></span></div>'; }).join('');
+    }
+    document.getElementById('pLeft').addEventListener('click', function () { z[3] -= 1.6; });
+    document.getElementById('pRight').addEventListener('click', function () { z[3] += 1.6; });
+    var pCtl = document.getElementById('pCtl');
+    pCtl.addEventListener('click', function () { ctl = !ctl; pCtl.textContent = ctl ? 'Controller on' : 'Controller off'; pCtl.classList.toggle('on', ctl); });
+    document.getElementById('pReset').addEventListener('click', function () { z = [0, 0, 0.12, 0]; ctl = true; pCtl.textContent = 'Controller on'; pCtl.classList.add('on'); drawP(); });
+
+    /* ---------- Unicycle diagram ---------- */
+    (function () {
+      var s = document.getElementById('uniArt');
+      function bot(x, y, a, fill) {
+        var g = el('g', { transform: 'translate(' + x + ' ' + y + ') rotate(' + a + ')' }, s);
+        el('rect', { x: -18, y: -13, width: 36, height: 26, rx: 6, fill: fill || '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, g);
+        el('rect', { x: -10, y: -17, width: 20, height: 5, rx: 2, fill: INK }, g);
+        el('rect', { x: -10, y: 12, width: 20, height: 5, rx: 2, fill: INK }, g);
+        el('path', { d: 'M4 -6 L14 0 L4 6 Z', fill: INK }, g);
+        return g;
+      }
+      // left panel: allowed vs forbidden
+      bot(150, 130, 0);
+      el('path', { d: 'M176 130 L250 130 M240 123 L252 130 L240 137', fill: 'none', stroke: '#3a9d5d', 'stroke-width': 2.5 }, s);
+      el('text', { x: 262, y: 134 }, s, 'v: forward');
+      el('path', { d: 'M150 104 L150 46', fill: 'none', stroke: '#e0855a', 'stroke-width': 2.5, 'stroke-dasharray': '5 4' }, s);
+      el('path', { d: 'M140 62 L160 42 M140 42 L160 62', stroke: '#e0855a', 'stroke-width': 2.5 }, s);
+      el('text', { x: 172, y: 56 }, s, 'sideways: not allowed');
+      el('path', { d: 'M120 168 A 40 40 0 0 0 182 168', fill: 'none', stroke: '#3367ad', 'stroke-width': 2 }, s);
+      el('path', { d: 'M174 160 L183 169 L172 174', fill: 'none', stroke: '#3367ad', 'stroke-width': 2 }, s);
+      el('text', { x: 150, y: 202, 'text-anchor': 'middle' }, s, 'ω: turn');
+      // right panel: parallel parking path
+      el('line', { x1: 420, y1: 200, x2: 740, y2: 200, stroke: '#c9c9c4' }, s);
+      el('line', { x1: 420, y1: 100, x2: 740, y2: 100, stroke: '#c9c9c4' }, s);
+      el('path', { d: 'M470 200 C 540 200, 560 100, 640 100', fill: 'none', stroke: '#3367ad', 'stroke-width': 2, 'stroke-dasharray': '6 4' }, s);
+      bot(470, 200, 0, '#ececea');
+      bot(555, 150, -52, '#ececea');
+      bot(660, 100, 0);
+      el('text', { x: 470, y: 232, 'text-anchor': 'middle' }, s, 'start');
+      el('text', { x: 660, y: 76, 'text-anchor': 'middle' }, s, 'one lane over');
+      el('text', { x: 620, y: 252, 'text-anchor': 'middle' }, s, 'drive + turn reaches it anyway');
+    })();
+
+    /* ---------- Unicycle simulation ---------- */
+    var us = document.getElementById('uniSvg');
+    var R = 1.5, vr = 0.5, wr = vr / R, kx = 1, ky = 6, kt = 2, US = 85, cxu = 350, cyu = 172;
+    var u = {}, fb = true, tSim = 0, trail = [], rtrail = [];
+    el('circle', { cx: cxu, cy: cyu, r: R * US, fill: 'none', stroke: '#c9c9c4', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, us);
+    var trailP = el('polyline', { points: '', fill: 'none', stroke: '#3367ad', 'stroke-width': 2 }, us);
+    var refDot = el('circle', { r: 7, fill: '#e0855a', stroke: INK }, us);
+    var robot = el('g', {}, us);
+    el('rect', { x: -14, y: -10, width: 28, height: 20, rx: 5, fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, robot);
+    el('rect', { x: -8, y: -14, width: 16, height: 4, rx: 2, fill: INK }, robot);
+    el('rect', { x: -8, y: 10, width: 16, height: 4, rx: 2, fill: INK }, robot);
+    el('path', { d: 'M2 -5 L11 0 L2 5 Z', fill: INK }, robot);
+    var lg = el('g', {}, us);
+    el('circle', { cx: 24, cy: 22, r: 6, fill: '#e0855a', stroke: INK }, lg); el('text', { x: 36, y: 26 }, lg, 'reference');
+    el('line', { x1: 18, y1: 44, x2: 30, y2: 44, stroke: '#3367ad', 'stroke-width': 2 }, lg); el('text', { x: 36, y: 48 }, lg, 'robot path');
+    function newStart() {
+      var a = Math.random() * 2 * Math.PI, d = 0.8 + Math.random() * 1.2;
+      u = { x: Math.cos(a) * d * 1.6, y: Math.sin(a) * d * 0.9, th: Math.random() * 2 * Math.PI };
+      tSim = 0; trail = [];
+    }
+    function ref(t) { var a = wr * t; return { x: R * Math.cos(a - Math.PI / 2), y: R * Math.sin(a - Math.PI / 2) + 0, th: a }; }
+    var err = { ex: 0, ey: 0, et: 0 };
+    function stepU(dt) {
+      var r = ref(tSim), dx = r.x - u.x, dy = r.y - u.y, c = Math.cos(u.th), s = Math.sin(u.th);
+      var ex = c * dx + s * dy, ey = -s * dx + c * dy, et = Math.atan2(Math.sin(r.th - u.th), Math.cos(r.th - u.th));
+      var v = vr, w = wr;
+      if (fb) { v = vr * Math.cos(et) + kx * ex; w = wr + ky * vr * ey + kt * Math.sin(et); v = Math.max(-1.5, Math.min(1.5, v)); w = Math.max(-4, Math.min(4, w)); }
+      u.x += v * Math.cos(u.th) * dt; u.y += v * Math.sin(u.th) * dt; u.th += w * dt; tSim += dt;
+      err = { ex: ex, ey: ey, et: et };
+    }
+    function toS(x, y) { return [cxu + x * US, cyu - y * US]; }
+    function drawU() {
+      var r = ref(tSim), pr = toS(r.x, r.y), pu = toS(u.x, u.y);
+      refDot.setAttribute('cx', pr[0]); refDot.setAttribute('cy', pr[1]);
+      robot.setAttribute('transform', 'translate(' + pu[0] + ' ' + pu[1] + ') rotate(' + (-u.th * 180 / Math.PI) + ')');
+      trail.push(pu[0].toFixed(1) + ',' + pu[1].toFixed(1)); if (trail.length > 900) trail.shift();
+      trailP.setAttribute('points', trail.join(' '));
+      var dist = Math.hypot(err.ex, err.ey);
+      var st = document.getElementById('uState');
+      if (dist < 0.05 && Math.abs(err.et) < 0.05) { st.textContent = 'On the path'; st.className = 'st bg-green'; }
+      else { st.textContent = fb ? 'Closing the gap' : 'Not correcting'; st.className = 'st ' + (fb ? 'bg-yellow' : 'bg-pink'); }
+      var o = [['Forward error eₓ', err.ex.toFixed(2), 'm'], ['Sideways error e_y', err.ey.toFixed(2), 'm', 1], ['Heading error e_θ', String(Math.round(err.et * 180 / Math.PI) || 0), '°']];
+      o[1][0] = 'Sideways error ey'; o[0][0] = 'Forward error ex'; o[2][0] = 'Heading error eθ';
+      document.getElementById('uOuts').innerHTML = o.map(function (x) { return '<div' + (x[3] ? ' class="hl"' : '') + '><span class="l">' + x[0] + '</span><span class="n">' + x[1] + '<small>' + x[2] + '</small></span></div>'; }).join('');
+    }
+    document.getElementById('uNew').addEventListener('click', function () { newStart(); drawU(); });
+    var uCtl = document.getElementById('uCtl');
+    uCtl.addEventListener('click', function () { fb = !fb; uCtl.textContent = fb ? 'Feedback on' : 'Feedback off'; uCtl.classList.toggle('on', fb); });
+    u = { x: -2.6, y: 1.2, th: -0.6 };
+
+    /* ---------- Loop ---------- */
+    drawP(); stepU(0); drawU();
+    if (reduce) {
+      // settle once so the picture is meaningful without motion
+      for (var i = 0; i < 1600; i++) stepU(0.02);
+      drawU();
+    } else {
+      var last = null;
+      (function loop(ts) {
+        if (last != null) {
+          var dt = Math.min(0.05, (ts - last) / 1000);
+          if (visible.pendSvg !== false) { for (var k = 0; k < 10; k++) stepP(dt / 10); drawP(); }
+          if (visible.uniSvg !== false) { for (var j = 0; j < 4; j++) stepU(dt / 4); drawU(); }
+        }
+        last = ts; requestAnimationFrame(loop);
+      })();
+    }
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['intro', 'cart', 'motion', 'linear', 'balance', 'uni', 'track', 'compare'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

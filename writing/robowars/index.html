@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Six-Wheeled Wedge Robot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Design and fabrication of a 24 kg six-wheeled defensive wedge robot for Robowar, built in 2013 by Shashank Mishra and Vishal Singh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Robowar additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.hero h1 { font-size: clamp(40px, 6vw, 76px); line-height: 1.02; }
+.hero h1 em { background: linear-gradient(transparent 24%, var(--yellow) 24%); }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.epi .abstract { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.epi .abstract p { font-size: 16px; color: var(--body); line-height: 1.6; font-weight: 400; letter-spacing: 0; }
+.epi .orig { font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.5; text-align: left; margin-top: 10px; color: var(--muted); max-width: 720px; }
+.epi .orig b { color: var(--ink); font-weight: 500; }
+
+.art { display: block; width: 100%; height: auto; }
+.art text { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.art .m { fill: var(--muted); }
+.scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 600px) { .scrollx .art { min-width: 620px; } #heroArt { display: none; } .scrollnote { display: block !important; } }
+.scrollnote { display: none; font-size: 12px; color: var(--muted); }
+
+.two, .three, .four { display: grid; gap: 12px; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.card { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.card b { color: var(--ink); font-size: 15px; }
+.card.line { border: 1px solid var(--ink); }
+.card .v { font-size: 30px; font-weight: 300; letter-spacing: -0.03em; color: var(--ink); line-height: 1.05; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .three { grid-template-columns: 1fr; } .four { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.flow span { border: 1px solid var(--ink); border-radius: 999px; padding: 4px 11px; background: var(--paper); color: var(--ink); }
+.flow span.hot { background: var(--pink); }
+.flow i { font-style: normal; color: var(--muted); }
+.mode { display: flex; flex-direction: column; gap: 10px; border-radius: 12px; padding: 16px; }
+.mode h4 { font-size: 16px; font-weight: 600; }
+.mode p { font-size: 13.5px; color: var(--body); }
+
+.calc { font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--soft); border-radius: 10px; padding: 14px 16px; line-height: 1.75; max-width: 720px; overflow-x: auto; white-space: nowrap; }
+.calc .c { color: var(--muted); }
+
+/* Interactive panels */
+.panel { border: 1px solid var(--ink); border-radius: 12px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: center; }
+.panel svg { width: 100%; max-width: 320px; height: auto; display: block; justify-self: center; }
+.panel .side { display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--body); min-width: 0; }
+.panel .big { font-size: 44px; font-weight: 300; letter-spacing: -0.04em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.panel .big small { font-size: 16px; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+.panel input[type=range] { width: 100%; accent-color: #111; }
+.panel .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: -6px; }
+.panel .tag { align-self: flex-start; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+.panel.wide { grid-template-columns: 1fr; }
+.outs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.outs > div { background: var(--soft); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.outs .l { font-size: 11.5px; color: var(--muted); }
+.outs .n { font-size: 22px; font-weight: 300; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.outs .n small { font-size: 12px; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.outs > div.hl { background: var(--yellow); }
+@media (max-width: 680px) { .panel { grid-template-columns: 1fr; } .outs { grid-template-columns: 1fr 1fr; } }
+
+/* Bars */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bars .row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 84px; gap: 12px; align-items: center; font-size: 13px; color: var(--body); }
+.bars .tr { height: 18px; position: relative; }
+.bars .b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+.bars .rng { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.18) 0 3px, transparent 3px 7px); }
+.bars .v { font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
+@media (max-width: 560px) { .bars .row { grid-template-columns: 96px minmax(0, 1fr) 70px; gap: 8px; font-size: 12px; } }
+
+.rules { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); max-width: 720px; }
+.rules b { color: var(--ink); }
+
+.risk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.risk > div { border: 1px dashed var(--ink); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.risk b { color: var(--ink); font-size: 15px; }
+@media (max-width: 760px) { .risk { grid-template-columns: 1fr; } }
+
+details.more2 { border-top: 1px solid var(--line); padding-top: 12px; }
+details.more2 summary { cursor: pointer; font-size: 14px; color: var(--ink); }
+.spec { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.spec td { border-bottom: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--body); }
+.spec td:first-child { color: var(--muted); width: 38%; }
+details.more2 ol { margin: 12px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--body); line-height: 1.45; }
+.spec2 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.spec2 > div { border-top: 1px solid var(--ink); padding-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+.spec2 .l { font-size: 12px; color: var(--muted); }
+.spec2 .n { font-size: 22px; white-space: nowrap; font-weight: 300; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.spec2 .n small { font-size: 13px; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+@media (max-width: 760px) { .spec2 { grid-template-columns: 1fr 1fr; } }
+.toggle { display: inline-flex; border: 1px solid var(--ink); border-radius: 999px; overflow: hidden; align-self: flex-start; }
+.toggle button { font: inherit; font-size: 13px; border: 0; background: var(--paper); color: var(--ink); padding: 5px 14px; cursor: pointer; }
+.toggle button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+.chainx { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+.chainx > div { border: 1px solid var(--ink); border-radius: 10px; padding: 12px; margin-right: 16px; position: relative; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--body); line-height: 1.35; }
+.chainx > div:nth-child(3n) { margin-right: 0; }
+.chainx > div:nth-child(3n)::after { display: none; }
+.chainx > div:not(:last-child)::after { content: "→"; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--ink); }
+.chainx .n { font-size: 22px; font-weight: 300; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+@media (max-width: 860px) { .chainx { grid-template-columns: 1fr 1fr; gap: 10px; } .chainx > div { margin-right: 0; } .chainx > div::after { display: none; } }
+.sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sliders > div { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 600px) { .sliders { grid-template-columns: 1fr; } }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="write" aria-label="Back to I write"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="write">I write</a> / Technology</span>
+    <span class="right">Design paper, 2013</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Design paper · Robowar</span>
+          <h1>Design of a Six-Wheeled <em>Wedge Robot</em></h1>
+        </div>
+        <div>
+          <p class="lede">Most fighting robots carry a spinning blade or a hammer. This one had no weapon at all. It was a 24 kg, six-wheeled steel wedge, designed to get under an opponent and push it out of the way.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Team</span><span class="v">Shashank Mishra and Vishal Singh</span></div>
+        <div><span class="l">Year</span><span class="v">2013</span></div>
+        <div><span class="l">Built in</span><span class="v">College workshop. Designed in SolidWorks.</span></div>
+        <div><span class="l">Strategy</span><span class="v">Defensive wedge and pusher. No active weapon.</span></div>
+      </div>
+      <div class="scrollx"><svg class="art" id="heroArt" viewBox="0 96 1100 170" role="img" aria-label="Drawing: side view of a low wedge robot sliding under an opponent robot"></svg></div>
+    </section>
+
+    <div class="epi">
+      <div class="abstract">
+        <span class="k11">Abstract</span>
+        <p>This paper presents the design, fabrication and engineering analysis of a six-wheeled heavyweight robot built for Robowar. The robot weighed about 24 kg and was designed as a defensive wedge and pushing robot rather than an active-weapon robot. It used a mild steel TIG-welded chassis, custom lathe-machined metal wheels with rubber contact surfaces, a chain-and-sprocket drivetrain and a two-motor skid-steer drive. The aim was to maximize traction, frontal stability, pushing force and structural durability.</p>
+      </div>
+      <p class="orig">Original title: <b>Design and Fabrication of a 24 kg Six-Wheeled Defensive Wedge Robot for Robowar Applications</b></p>
+    </div>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#idea"><span>01</span><span>The idea</span></a>
+          <a href="#layout"><span>02</span><span>The layout</span></a>
+          <a href="#six"><span>03</span><span>Why six wheels</span></a>
+          <a href="#wedge"><span>04</span><span>Chassis and wedge</span></a>
+          <a href="#push"><span>05</span><span>How hard it pushes</span></a>
+          <a href="#drive"><span>06</span><span>Speed, power and gearing</span></a>
+          <a href="#turn"><span>07</span><span>Turning</span></a>
+          <a href="#build"><span>08</span><span>Building it</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="idea">
+          <div class="sec-head"><span class="k">01</span><h2>The idea</h2></div>
+          <p class="lead2">A Robowar robot has to survive hits, grip the floor, and stay in control while something heavy pushes back.</p>
+          <p>Weapons are hard to build, and they break. So we put everything into the parts that decide a pushing match: ground contact, torque, wedge geometry and a strong chassis. The plan was simple. Get the wedge under the opponent, lift its front off the floor so its wheels lose grip, and drive it where we wanted.</p>
+          <div class="four">
+            <div class="card bg-yellow"><b>Push hard</b>Maximize pushing force through traction.</div>
+            <div class="card bg-blue"><b>Stay planted</b>Six wheels for stable ground contact.</div>
+            <div class="card bg-green"><b>Get under</b>A low front wedge to lift opponents.</div>
+            <div class="card bg-gray"><b>Take hits</b>A mild steel chassis that absorbs impact.</div>
+          </div>
+          <p>Two more goals shaped every choice: it had to be buildable in a college workshop, and it had to stay controllable while accelerating, turning and pushing.</p>
+        </section>
+
+        <section class="sec" id="layout">
+          <div class="sec-head"><span class="k">02</span><h2>The layout</h2></div>
+          <p>Three wheels sit on each side. One DC geared motor drives each side, and a chain carries its power to all three wheels on that side. The two sides are controlled separately, so the robot can drive forward, reverse, curve, or spin in place.</p>
+          <figure>
+            <div class="scrollx"><svg class="art" id="topArt" viewBox="-70 0 970 490" role="img" aria-label="Top view: a rectangular chassis with a wedge at the front, three wheels on each side, and one motor per side linked to its wheels by a chain"></svg></div>
+            <span class="scrollnote">Swipe sideways to see the whole drawing.</span>
+            <figcaption>Top view, redrawn from the paper's schematic. Not to scale.</figcaption>
+          </figure>
+          <div class="spec2">
+            <div><span class="l">Mass</span><span class="n">24<small>kg</small></span></div>
+            <div><span class="l">Length × width × height</span><span class="n">700 × 550 × 250<small>mm</small></span></div>
+            <div><span class="l">Wheels</span><span class="n">6 × 125<small>mm</small></span></div>
+            <div><span class="l">Wedge angle</span><span class="n">30<small>°</small></span></div>
+          </div>
+        </section>
+
+        <section class="sec" id="six">
+          <div class="sec-head"><span class="k">03</span><h2>Why six wheels</h2></div>
+          <p>A pusher is only as good as its grip. The robot weighs 24 × 9.81 = 235 N. Spreading that over more wheels keeps more of it on the floor when the robot is hit or when one wheel lifts.</p>
+          <div class="panel">
+            <svg id="wheelSvg" viewBox="0 0 320 220" role="img" aria-label="Side view showing the robot's weight split across its wheels"></svg>
+            <div class="side">
+              <div class="toggle" role="group" aria-label="Number of wheels"><button type="button" data-w="4">4 wheels</button><button type="button" data-w="6">6 wheels</button></div>
+              <span class="k11">Load on each wheel</span>
+              <span class="big" id="wheelVal">39.2<small>N</small></span>
+              <span id="wheelNote"></span>
+            </div>
+          </div>
+          <div class="two">
+            <div class="card bg-green"><span class="k11">Gains</span><b>Grip and stability</b>More contact points, better load spread, steadier under impact, and no total loss of traction if one wheel lifts. It also suits a chain running along each side.</div>
+            <div class="card bg-pink"><span class="k11">Cost</span><b>Scrub when turning</b>In a skid-steer turn the wheels must slide sideways, and more wheels means more scrub. We accepted this. Pushing mattered more than nimble turning.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="wedge">
+          <div class="sec-head"><span class="k">04</span><h2>Chassis and wedge</h2></div>
+          <p>The chassis was mild steel, TIG welded. Mild steel is strong, tough under impact, easy to find and easy to weld. The frame had to take direct collisions, twisting loads when turning, and concentrated loads at the wedge.</p>
+          <p>The wedge did three jobs. It slid under opponents and turned forward motion into lift. It lowered the robot's front profile. And it shielded the drivetrain and electronics behind it.</p>
+          <figure>
+            <div class="scrollx"><svg class="art" id="wedgeArt" viewBox="0 0 760 245" role="img" aria-label="Side view of the wedge: 150 mm long, rising at 30 degrees to 86.6 mm"></svg></div>
+            <figcaption>Wedge geometry. h<sub>w</sub> = L<sub>w</sub> tan θ = 0.15 × tan 30° = 86.6 mm.</figcaption>
+          </figure>
+          <p>A 150 mm wedge at 30° rises to 86.6 mm. That is low enough to slip under most robots, and deep enough to be built as a welded steel structure.</p>
+        </section>
+
+        <section class="sec" id="push">
+          <div class="sec-head"><span class="k">05</span><h2>How hard it pushes</h2></div>
+          <p>A wheeled robot cannot push harder than its tires can grip. Beyond that, the wheels spin. So the drivetrain was sized backward from the friction limit, not forward from the motors.</p>
+          <div class="chainx">
+            <div><span class="k11">Weight</span><span class="n">235 N</span>24 kg × 9.81</div>
+            <div><span class="k11">× friction 0.65</span><span class="n">153 N</span>Most the robot can push</div>
+            <div><span class="k11">÷ 2 sides</span><span class="n">76.5 N</span>Per side</div>
+            <div><span class="k11">× radius 62.5 mm</span><span class="n">4.78 N·m</span>Wheel torque per side</div>
+            <div><span class="k11">× safety 2.5</span><span class="n">12 N·m</span>Design torque per side</div>
+            <div class="bg-yellow"><span class="k11">Result</span><span class="n">High-torque</span>DC geared motors and chain drive</div>
+          </div>
+          <p>The safety factor of 2.5 covers acceleration, chain losses, bearing friction, impacts and uneven loads on the wheels. Rolling resistance, by contrast, is tiny: 0.03 × 235 = 7 N, about one twentieth of the pushing limit. The drivetrain was built for fighting, not cruising.</p>
+          <div class="bars" id="forceBars"></div>
+        </section>
+
+        <section class="sec" id="drive">
+          <div class="sec-head"><span class="k">06</span><h2>Speed, power and gearing</h2></div>
+          <p>The target speed was 1.2 m/s, fast enough to close distance in a match and slow enough to control. A 125 mm wheel travels 0.393 m per turn, so it must spin at 1.2 / 0.393 = 3.05 turns per second, about 180 rpm.</p>
+          <p>The motors ran at 300 rpm. A 12-tooth sprocket on the motor driving a 20-tooth sprocket on the wheels gives a ratio of 20 / 12 = 1.67. That brings 300 rpm down to 180 rpm and raises torque by the same factor.</p>
+          <p>Pushing at the friction limit at full speed takes 153 × 1.2 = 184 W at the wheels, or 245 W from the motors at 75% drivetrain efficiency. At 24 V, that is about 10 A. Starts, stalls, sudden reversals and hits draw far more, so the drive was sized for 300 to 400 W and the electrics for 25 to 40 A peaks.</p>
+          <p>Try other floors and speeds.</p>
+          <div class="panel wide">
+            <div class="sliders">
+              <div><span class="k11">Friction coefficient, μ</span><span class="big" id="muVal">0.65</span><input id="mu" type="range" min="0.3" max="1" step="0.05" value="0.65" aria-label="Friction coefficient"><div class="ticks"><span>0.3</span><span>0.65</span><span>1.0</span></div></div>
+              <div><span class="k11">Target speed</span><span class="big" id="vVal">1.2<small>m/s</small></span><input id="vel" type="range" min="0.5" max="2" step="0.1" value="1.2" aria-label="Target speed in meters per second"><div class="ticks"><span>0.5</span><span>1.2</span><span>2.0</span></div></div>
+            </div>
+            <div class="outs" id="driveOuts"></div>
+            <span class="disclaimer">Uses the paper's formulas: F = μW, design torque = (F/2)(0.0625 m)(2.5), wheel rpm = 60v/(π × 0.125 m), ratio = 300 rpm / wheel rpm, input power = Fv / 0.75, current = power / 24 V. Rubber on the arena floor was taken as μ = 0.65.</span>
+          </div>
+        </section>
+
+        <section class="sec" id="turn">
+          <div class="sec-head"><span class="k">07</span><h2>Turning</h2></div>
+          <p>The robot steers like a tank. Run both sides at the same speed and it goes straight. Slow one side and it curves. Run one side forward and the other backward and it spins in place.</p>
+          <div class="panel">
+            <svg id="turnSvg" viewBox="0 0 320 280" role="img" aria-label="Top view of an in-place turn: left side pushes forward, right side pushes back, creating a turning moment"></svg>
+            <div class="side">
+              <span class="k11">Turning moment, in-place spin</span>
+              <span class="big">42<small>N·m</small></span>
+              <span>M<sub>z</sub> = F<sub>side</sub> × B = 76.5 N × 0.55 m.</span>
+              <span>Each side pushes with up to 76.5 N in opposite directions, 0.55 m apart. That twist is what lets the robot swing its wedge toward an opponent, though six wheels scrubbing sideways resist it.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="build">
+          <div class="sec-head"><span class="k">08</span><h2>Building it</h2></div>
+          <p>Everything was made in the college workshop.</p>
+          <div class="chainx">
+            <div><span class="k11">1</span><b>Model</b>SolidWorks CAD</div>
+            <div><span class="k11">2</span><b>Cut and weld</b>Mild steel, TIG welded</div>
+            <div><span class="k11">3</span><b>Drill</b>Motor, shaft and bearing mounts</div>
+            <div><span class="k11">4</span><b>Turn wheels</b>On the lathe</div>
+            <div><span class="k11">5</span><b>Assemble</b>Sprockets, chains, grinding, finishing</div>
+            <div class="bg-yellow"><span class="k11">6</span><b>Wire and test</b>Electrics, controls, troubleshooting</div>
+          </div>
+          <p>The wheels deserve a note. We turned them on a lathe from metal for strength and accuracy, then added a rubber contact layer for grip. Making them ourselves meant the hubs fit our shafts and sprockets exactly, and they held up under pushing and impact. Since pushing depends on traction, the wheels were the heart of the design. TIG welding gave strong, clean joints for a frame that would be hit again and again.</p>
+          <h3>In summary</h3>
+          <table class="spec"><tbody>
+            <tr><td>Robot mass and weight</td><td>24 kg, 235 N</td></tr>
+            <tr><td>Load per wheel</td><td>39.2 N</td></tr>
+            <tr><td>Friction coefficient</td><td>0.65</td></tr>
+            <tr><td>Traction-limited pushing force</td><td>153 N</td></tr>
+            <tr><td>Torque per side</td><td>4.78 N·m before safety factor, 12 N·m design</td></tr>
+            <tr><td>Wheel diameter and speed</td><td>125 mm, 180 rpm for 1.2 m/s</td></tr>
+            <tr><td>Sprockets</td><td>12 to 20 teeth, ratio 1.67</td></tr>
+            <tr><td>Drive power</td><td>300 to 400 W</td></tr>
+            <tr><td>Electrics</td><td>24 V, about 10 A pushing, 25 to 40 A peaks</td></tr>
+            <tr><td>Turning moment</td><td>42 N·m</td></tr>
+          </tbody></table>
+          <p>Every number points the same way. The robot was designed around traction-limited pushing, and the drivetrain, the six wheels, the wedge and the steel frame all serve that goal. It was a lesson in the whole chain of mechanical design: CAD, drivetrain sizing, welding, machining, wiring and, finally, driving.</p>
+          <a class="next" href="#" data-site-link="write"><span class="l">Back to</span><span class="t">I write →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var NS = 'http://www.w3.org/2000/svg';
+    function el(tag, attrs, parent, text) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      if (text != null) e.textContent = text;
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+    var INK = '#111';
+    function wheel(s, cx, cy, r) {
+      el('circle', { cx: cx, cy: cy, r: r, fill: '#3d3d3b', stroke: INK }, s);
+      el('circle', { cx: cx, cy: cy, r: r * 0.72, fill: '#c9c9c4', stroke: INK }, s);
+      el('circle', { cx: cx, cy: cy, r: 3, fill: INK }, s);
+    }
+
+    /* Hero: side view of wedge robot lifting an opponent */
+    (function () {
+      var s = document.getElementById('heroArt');
+      el('line', { x1: 0, y1: 230.5, x2: 1100, y2: 230.5, stroke: INK }, s);
+      // our robot (facing right)
+      var x0 = 300;
+      el('path', { d: 'M' + x0 + ' 150 L' + (x0 + 330) + ' 150 L' + (x0 + 330) + ' 162 L' + (x0 + 450) + ' 228 L' + x0 + ' 228 Z', fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('rect', { x: x0 + 20, y: 132, width: 290, height: 18, rx: 3, fill: '#ececea', stroke: INK }, s);
+      [x0 + 60, x0 + 165, x0 + 270].forEach(function (cx) { wheel(s, cx, 205, 25); });
+      el('text', { x: x0 + 165, y: 124, 'text-anchor': 'middle', class: 'm' }, s, 'Our robot, 24 kg');
+      // opponent tilted, front lifted onto wedge
+      var g = el('g', { transform: 'rotate(6 ' + (x0 + 660) + ' 228)' }, s);
+      el('rect', { x: x0 + 400, y: 170, width: 260, height: 58, rx: 6, fill: '#ececea', stroke: INK, 'stroke-width': 1.5 }, g);
+      el('rect', { x: x0 + 500, y: 150, width: 70, height: 20, fill: '#fbdde8', stroke: INK }, g);
+      [x0 + 450, x0 + 610].forEach(function (cx) { wheel(g, cx, 208, 20); });
+      el('text', { x: x0 + 560, y: 130, 'text-anchor': 'middle', class: 'm' }, s, 'Opponent');
+      el('path', { d: 'M' + (x0 - 60) + ' 190 L' + (x0 - 10) + ' 190 M' + (x0 - 20) + ' 182 L' + (x0 - 8) + ' 190 L' + (x0 - 20) + ' 198', fill: 'none', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('text', { x: x0 + 410, y: 252, 'text-anchor': 'middle', class: 'm' }, s, 'Front wheels lifted, grip lost');
+      el('text', { x: 1100, y: 252, 'text-anchor': 'end', class: 'm' }, s, 'Drawing, not to scale');
+    })();
+
+    /* Top view */
+    (function () {
+      var s = document.getElementById('topArt');
+      var X = 140, Y = 70, W = 560, H = 330; // chassis body (minus wedge)
+      el('rect', { x: X, y: Y, width: W, height: H, rx: 8, fill: '#ececea', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M' + (X + W) + ' ' + Y + ' L' + (X + W + 120) + ' ' + (Y + 20) + ' L' + (X + W + 120) + ' ' + (Y + H - 20) + ' L' + (X + W) + ' ' + (Y + H) + ' Z', fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, s);
+      for (var i = 1; i < 6; i++) el('line', { x1: X + W + i * 20, y1: Y + 4 + i * 3, x2: X + W + i * 20, y2: Y + H - 4 - i * 3, stroke: '#c9b06a' }, s);
+      var wx = [X + 90, X + 280, X + 470];
+      [Y - 14, Y + H - 36].forEach(function (wy, side) {
+        wx.forEach(function (cx) { el('rect', { x: cx - 50, y: wy, width: 100, height: 50, rx: 8, fill: '#3d3d3b', stroke: INK }, s); el('rect', { x: cx - 36, y: wy + 8, width: 72, height: 34, rx: 4, fill: '#76766f' }, s); });
+        var cy = side ? Y + H - 64 : Y + 64;
+        // chain loop
+        el('rect', { x: wx[0] - 14, y: cy - 10, width: wx[2] - wx[0] + 28, height: 20, rx: 10, fill: 'none', stroke: '#e0855a', 'stroke-width': 2.5, 'stroke-dasharray': '5 3' }, s);
+        wx.forEach(function (cx) { el('circle', { cx: cx, cy: cy, r: 10, fill: '#fff', stroke: INK }, s); });
+        // motor
+        el('rect', { x: wx[1] - 34, y: side ? cy - 76 : cy + 22, width: 68, height: 54, rx: 6, fill: '#d9e8ff', stroke: INK, 'stroke-width': 1.5 }, s);
+        el('line', { x1: wx[1], y1: side ? cy - 22 : cy + 22, x2: wx[1], y2: cy + (side ? -10 : 10), stroke: INK, 'stroke-width': 3 }, s);
+        el('text', { x: wx[1], y: side ? cy - 45 : cy + 53, 'text-anchor': 'middle' }, s, 'DC motor');
+      });
+      el('rect', { x: X + 180, y: Y + 150, width: 200, height: 30, rx: 4, fill: '#fff', stroke: INK, 'stroke-dasharray': '3 3' }, s);
+      el('text', { x: X + 280, y: Y + 170, 'text-anchor': 'middle', class: 'm' }, s, 'Battery and controls');
+      function lab(x, y, t, a) { el('text', { x: x, y: y, 'text-anchor': a || 'start' }, s, t); }
+      lab(X + W + 130, Y + H / 2 + 4, 'Wedge, 30°');
+      lab(X + W + 60, Y - 6, 'Front', 'middle');
+      lab(X + 280, Y + H + 40, 'Chain and sprockets drive all three wheels on a side', 'middle');
+      lab(X - 10, Y + H / 2 + 4, 'Mild steel, TIG welded', 'end');
+      // dims
+      el('path', { d: 'M' + X + ' ' + (Y + H + 58) + ' L' + (X + W + 120) + ' ' + (Y + H + 58), stroke: '#76766f' }, s);
+      el('text', { x: X + (W + 120) / 2, y: Y + H + 74, 'text-anchor': 'middle', class: 'm' }, s, '700 mm');
+      el('text', { x: 30, y: Y - 26 + 0, class: 'm' }, s, '');
+    })();
+
+    /* Wheels toggle */
+    var ws = document.getElementById('wheelSvg');
+    function drawWheels(n) {
+      ws.innerHTML = '';
+      el('line', { x1: 10, y1: 180.5, x2: 310, y2: 180.5, stroke: INK }, ws);
+      el('rect', { x: 40, y: 110, width: 240, height: 40, rx: 6, fill: '#ececea', stroke: INK, 'stroke-width': 1.5 }, ws);
+      var per = 235.44 / n, xs = n === 6 ? [70, 160, 250] : [70, 250];
+      xs.forEach(function (x) {
+        wheel(ws, x, 160, 20);
+        var len = per * 0.9;
+        el('path', { d: 'M' + x + ' 186 L' + x + ' ' + (186 + len * 0.45) + ' M' + (x - 5) + ' ' + (186 + len * 0.45 - 7) + ' L' + x + ' ' + (186 + len * 0.45) + ' L' + (x + 5) + ' ' + (186 + len * 0.45 - 7), stroke: '#e0855a', 'stroke-width': 2, fill: 'none' }, ws);
+      });
+      el('text', { x: 160, y: 98, 'text-anchor': 'middle', style: 'font-family:var(--mono);font-size:12px;fill:#111' }, ws, 'Weight 235 N');
+      el('path', { d: 'M160 52 L160 84 M154 76 L160 86 L166 76', stroke: INK, fill: 'none', 'stroke-width': 1.5 }, ws);
+      document.getElementById('wheelVal').innerHTML = per.toFixed(1) + '<small>N</small>';
+      document.getElementById('wheelNote').textContent = n === 6 ? 'Each wheel carries a sixth of the weight. If one lifts, five still grip.' : 'Each wheel carries a quarter. If one lifts off the floor, a quarter of the grip goes with it.';
+      Array.prototype.forEach.call(document.querySelectorAll('.toggle button'), function (b) { b.setAttribute('aria-pressed', +b.dataset.w === n ? 'true' : 'false'); });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.toggle button'), function (b) { b.addEventListener('click', function () { drawWheels(+b.dataset.w); }); });
+    drawWheels(6);
+
+    /* Wedge geometry */
+    (function () {
+      var s = document.getElementById('wedgeArt');
+      var k = 2.2, x0 = 160, y0 = 200; // 150 mm -> 330 px
+      el('line', { x1: 0, y1: y0 + .5, x2: 760, y2: y0 + .5, stroke: INK }, s);
+      var L = 150 * k, h = 86.6 * k;
+      el('rect', { x: 20, y: y0 - h, width: x0 - 20, height: h, fill: '#ececea', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M' + x0 + ' ' + (y0 - h) + ' L' + (x0 + L) + ' ' + y0 + ' L' + x0 + ' ' + y0 + ' Z', fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M' + (x0 + L - 60) + ' ' + y0 + ' A 60 60 0 0 0 ' + (x0 + L - 60 * Math.cos(Math.PI / 6)) + ' ' + (y0 - 60 * Math.sin(Math.PI / 6)), fill: 'none', stroke: INK }, s);
+      el('text', { x: x0 + L - 92, y: y0 - 10 }, s, '30°');
+      el('path', { d: 'M' + x0 + ' ' + (y0 + 18) + ' L' + (x0 + L) + ' ' + (y0 + 18), stroke: INK }, s);
+      el('text', { x: x0 + L / 2, y: y0 + 36, 'text-anchor': 'middle' }, s, 'Lw = 150 mm');
+      el('path', { d: 'M' + (x0 + 10) + ' ' + (y0 - h + 4) + ' L' + (x0 + 10) + ' ' + (y0 - 4), stroke: INK }, s);
+      el('text', { x: x0 + 18, y: y0 - 40, 'text-anchor': 'start' }, s, 'hw = 86.6 mm');
+      el('text', { x: 90, y: y0 - h - 10, 'text-anchor': 'middle', class: 'm' }, s, 'Chassis');
+      el('text', { x: x0 + L + 20, y: y0 - 60, class: 'm' }, s, 'Tip meets the floor and');
+      el('text', { x: x0 + L + 20, y: y0 - 44, class: 'm' }, s, 'slides under the opponent');
+    })();
+
+    /* Force bars */
+    (function () {
+      var rows = [['Pushing limit, μW', 153, '#f4a97f', '153 N'], ['Per side', 76.5, '#fff1b8', '76.5 N'], ['Rolling resistance', 7.06, '#d9e8ff', '7 N']];
+      document.getElementById('forceBars').innerHTML = rows.map(function (r) { return '<div class="row"><span>' + r[0] + '</span><span class="tr"><span class="b" style="width:' + (r[1] / 153 * 100).toFixed(2) + '%;background:' + r[2] + '"></span></span><span class="v">' + r[3] + '</span></div>'; }).join('');
+    })();
+
+    /* Drive calculator */
+    var mu = document.getElementById('mu'), vel = document.getElementById('vel');
+    function drive() {
+      var m = +mu.value, v = +vel.value, W = 235.44, F = m * W;
+      var T = F / 2 * 0.0625 * 2.5, rpm = 60 * v / (Math.PI * 0.125), G = 300 / rpm, P = F * v / 0.75, I = P / 24;
+      document.getElementById('muVal').textContent = m.toFixed(2);
+      document.getElementById('vVal').innerHTML = v.toFixed(1) + '<small>m/s</small>';
+      var o = [['Pushing limit', F.toFixed(0), 'N', 1], ['Design torque per side', T.toFixed(1), 'N·m'], ['Wheel speed', rpm.toFixed(0), 'rpm'], ['Sprocket ratio, 300 rpm motor', G.toFixed(2), ''], ['Input power at full push', P.toFixed(0), 'W'], ['Current at 24 V', I.toFixed(1), 'A']];
+      document.getElementById('driveOuts').innerHTML = o.map(function (x) { return '<div' + (x[3] ? ' class="hl"' : '') + '><span class="l">' + x[0] + '</span><span class="n">' + x[1] + '<small>' + x[2] + '</small></span></div>'; }).join('');
+    }
+    mu.addEventListener('input', drive); vel.addEventListener('input', drive); drive();
+
+    /* Turning */
+    (function () {
+      var s = document.getElementById('turnSvg');
+      el('rect', { x: 90, y: 50, width: 140, height: 180, rx: 8, fill: '#ececea', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M90 50 L110 20 L210 20 L230 50 Z', fill: '#fff1b8', stroke: INK, 'stroke-width': 1.5 }, s);
+      [70, 140, 210].forEach(function (y) { el('rect', { x: 72, y: y - 22, width: 16, height: 44, rx: 4, fill: '#3d3d3b' }, s); el('rect', { x: 232, y: y - 22, width: 16, height: 44, rx: 4, fill: '#3d3d3b' }, s); });
+      el('path', { d: 'M50 200 L50 90 M42 102 L50 88 L58 102', stroke: '#e0855a', 'stroke-width': 3, fill: 'none' }, s);
+      el('path', { d: 'M270 90 L270 200 M262 188 L270 202 L278 188', stroke: '#e0855a', 'stroke-width': 3, fill: 'none' }, s);
+      el('text', { x: 40, y: 220, 'text-anchor': 'middle', style: 'font-family:var(--mono);font-size:11px;fill:#111' }, s, '76.5 N');
+      el('text', { x: 280, y: 80, 'text-anchor': 'middle', style: 'font-family:var(--mono);font-size:11px;fill:#111' }, s, '76.5 N');
+      el('path', { d: 'M135 140 A 26 26 0 1 1 160 166', fill: 'none', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M152 160 L161 166 L152 172', fill: 'none', stroke: INK, 'stroke-width': 1.5 }, s);
+      el('path', { d: 'M80 262 L240 262 M80 256 L80 268 M240 256 L240 268', stroke: '#76766f' }, s);
+      el('text', { x: 160, y: 256, 'text-anchor': 'middle', style: 'font-family:var(--mono);font-size:11px;fill:#76766f' }, s, 'B = 0.55 m');
+    })();
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['idea', 'layout', 'six', 'wedge', 'push', 'drive', 'turn', 'build'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anticarbon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Anticarbon, the advertising company Shashank Mishra founded to replace plastic bags in Delhi markets with ad-funded newspaper bags.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Anticarbon additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.bags { display: block; width: 100%; height: auto; }
+
+/* Three bags compared */
+.cmp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cmp > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); line-height: 1.5; }
+.cmp .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.cmp h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.cmp svg { width: 90px; height: 90px; display: block; }
+.cmp .cost { display: flex; flex-direction: column; gap: 4px; }
+.cmp .cost .l { font-size: 12px; color: var(--muted); }
+.cmp .meter { height: 10px; border-radius: 5px; background: rgba(0,0,0,.08); position: relative; overflow: hidden; }
+.cmp .meter i { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 5px; }
+.cmp .tag { align-self: flex-start; font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); }
+@media (max-width: 760px) { .cmp { grid-template-columns: 1fr; } }
+
+/* Ban moment */
+.ban { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; border: 1px solid var(--ink); border-radius: 12px; padding: 20px 22px; max-width: 760px; }
+.ban svg { width: 64px; height: 64px; }
+.ban .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+.ban b { font-size: 18px; font-weight: 600; display: block; margin-bottom: 4px; }
+.ban p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+
+/* Ad-funded loop */
+.loop4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.lp { display: flex; flex-direction: column; gap: 8px; padding-right: 22px; position: relative; min-width: 0; }
+.lp:last-child { padding-right: 0; }
+.lp .box { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--ink); min-height: 112px; }
+.lp .box b { font-size: 16px; }
+.lp .box span { font-size: 13px; color: var(--body); line-height: 1.45; }
+.lp .gets { font-family: var(--mono); font-size: 11px; color: var(--body); line-height: 1.4; }
+.lp:not(:last-child) .box::after { content: ""; position: absolute; right: 2px; top: 56px; width: 18px; border-top: 1px solid var(--ink); }
+.lp:not(:last-child) .box::before { content: ""; position: absolute; right: 0; top: 52px; border: 4.5px solid transparent; border-left: 6px solid var(--ink); border-right: 0; }
+.loop-back { margin-top: 10px; border: 1px dashed var(--ink); border-top: 0; height: 18px; border-radius: 0 0 10px 10px; margin-left: 12%; margin-right: 12%; position: relative; }
+.loop-back span { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); background: var(--paper); padding: 0 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 760px) {
+  .loop4 { grid-template-columns: 1fr; gap: 10px; }
+  .lp { padding: 0; }
+  .lp .box { min-height: 0; }
+  .lp .box::before, .lp .box::after { display: none; }
+  .loop-back { display: none; }
+}
+
+/* Market targeting */
+.market { border: 1px solid var(--ink); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.market .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.street { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.shop { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.shop .front { border: 1px solid var(--ink); border-radius: 6px 6px 0 0; overflow: hidden; }
+.shop .awn { height: 14px; background: repeating-linear-gradient(90deg, var(--c) 0 12px, #fff 12px 24px); border-bottom: 1px solid var(--ink); }
+.shop .name { padding: 10px; font-size: 14px; font-weight: 600; text-align: center; background: var(--paper); }
+.shop .who { font-size: 12.5px; color: var(--body); text-align: center; line-height: 1.4; }
+.shop .ad { align-self: center; font-family: var(--mono); font-size: 10.5px; background: var(--c); border: 1px solid var(--ink); padding: 2px 8px; }
+.road { border-top: 2px dashed var(--line); }
+@media (max-width: 640px) { .street { grid-template-columns: 1fr 1fr; } }
+
+/* Why it didn't win */
+.whys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.why { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; }
+.why .ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; }
+.why .ic svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.why h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; line-height: 1.35; }
+.why p { font-size: 14px; color: var(--body); line-height: 1.55; }
+@media (max-width: 700px) { .whys { grid-template-columns: 1fr; } }
+
+/* Exit */
+.exit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; max-width: 760px; }
+.exit > div { display: flex; flex-direction: column; gap: 6px; padding-right: 18px; font-size: 14px; color: var(--body); line-height: 1.5; border-top: 1.5px solid var(--ink); padding-top: 12px; position: relative; }
+.exit > div::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--ink); background: var(--c, var(--paper)); }
+.exit b { color: var(--ink); font-size: 15px; }
+@media (max-width: 640px) { .exit { grid-template-columns: 1fr; gap: 18px; } }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="build" aria-label="Back to I build"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="build">I build</a> / Institutions</span>
+    <span class="right">Ended at the pilot</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Institution · Founded</span>
+          <h1>Anticarbon</h1>
+        </div>
+        <div>
+          <p class="lede">An advertising company with one goal: to take plastic bags out of Delhi's local markets. Advertisers would pay for newspaper bags, made by women in Delhi's slums, so shops could hand them out for free.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Role</span><span class="v">Founder</span></div>
+        <div><span class="l">Where</span><span class="v">Local markets, New Delhi</span></div>
+        <div><span class="l">Model</span><span class="v">Advertising printed on newspaper bags</span></div>
+        <div><span class="l">Outcome</span><span class="v">Ended at the pilot; exited at break-even</span></div>
+      </div>
+      <!-- A row of newspaper bags, one carrying a printed ad, beside a crossed-out plastic bag. -->
+      <svg class="bags" viewBox="0 0 1112 180" role="img" aria-label="A row of newspaper bags of different sizes, one with a printed advertisement, next to a crossed-out plastic bag.">
+        <defs>
+          <pattern id="news" width="8" height="6" patternUnits="userSpaceOnUse"><path d="M0 3 H6" stroke="#b9b9b2" stroke-width="1"/></pattern>
+        </defs>
+        <g stroke="#111" stroke-width="1.2" fill="none">
+          <g transform="translate(150 60)"><path d="M0 120 L6 20 H74 L80 120 Z" fill="url(#news)"/><path d="M22 20 Q40 -6 58 20"/></g>
+          <g transform="translate(300 30)"><path d="M0 150 L8 30 H112 L120 150 Z" fill="url(#news)"/><path d="M34 30 Q60 -4 86 30"/><rect x="24" y="66" width="72" height="44" rx="3" fill="#fff1b8"/></g>
+          <g transform="translate(490 80)"><path d="M0 100 L5 20 H55 L60 100 Z" fill="url(#news)"/><path d="M16 20 Q30 0 44 20"/></g>
+          <g transform="translate(620 46)"><path d="M0 134 L7 26 H93 L100 134 Z" fill="url(#news)"/><path d="M30 26 Q50 -2 70 26"/></g>
+          <g transform="translate(850 54)"><path d="M10 126 Q-6 60 14 20 L24 30 Q50 14 76 30 L86 20 Q106 60 90 126 Z" fill="#fff" stroke-dasharray="4 3"/><path d="M-6 0 L106 140 M106 0 L-6 140" stroke-width="1.5"/></g>
+        </g>
+        <text x="360" y="115" text-anchor="middle" font-size="12" font-weight="600" fill="#111">YOUR AD</text>
+        <text x="360" y="130" text-anchor="middle" font-size="10" fill="#3d3d3b">local brand</text>
+        <text x="900" y="200" text-anchor="middle" font-size="11" fill="#76766f"></text>
+        <line x1="0" y1="179.5" x2="1112" y2="179.5" stroke="#111"/>
+      </svg>
+    </section>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#problem"><span>01</span><span>The problem</span></a>
+          <a href="#idea"><span>02</span><span>The idea</span></a>
+          <a href="#pilot"><span>03</span><span>Why it didn't win</span></a>
+          <a href="#exit"><span>04</span><span>The exit</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="problem">
+          <div class="sec-head"><span class="k">01</span><h2>The problem</h2></div>
+          <p class="lead2">Plastic bags were everywhere in Delhi's local markets. A better bag already existed, but it could not compete on price.</p>
+          <p>Women in the slums of Delhi made bags out of old newspapers, in different sizes. I worked with them and wanted to sell these bags in the market, so that people would use them instead of plastic bags. The problem was cost. Newspaper bags were expensive, and there was no way to subsidize them. Plastic bags were cheap and very useful, and newspaper bags could not beat them.</p>
+          <div class="cmp">
+            <div class="bg-soft">
+              <span class="k">The habit</span><h4>Plastic bag</h4>
+              <svg viewBox="0 0 90 90" aria-hidden="true"><path d="M20 82 Q8 46 22 18 L30 26 Q45 14 60 26 L68 18 Q82 46 70 82 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-dasharray="4 3"/></svg>
+              <div class="cost"><span class="l">Cost to the shop</span><div class="meter"><i style="width:10%"></i></div></div>
+              Very cheap, useful, and easy to store in a small space.
+            </div>
+            <div class="bg-soft">
+              <span class="k">The alternative</span><h4>Newspaper bag</h4>
+              <svg viewBox="0 0 90 90" aria-hidden="true"><defs><pattern id="nw" width="8" height="6" patternUnits="userSpaceOnUse"><path d="M0 3 H6" stroke="#b9b9b2"/></pattern></defs><path d="M14 84 L19 24 H71 L76 84 Z" fill="url(#nw)" stroke="#111" stroke-width="1.2"/><path d="M32 24 Q45 4 58 24" fill="none" stroke="#111" stroke-width="1.2"/></svg>
+              <div class="cost"><span class="l">Cost to the shop</span><div class="meter"><i style="width:80%"></i></div></div>
+              Made by hand from newspapers. Better for the environment, but expensive, with no subsidy.
+            </div>
+            <div class="bg-green" style="border:1px solid var(--ink)">
+              <span class="k" style="color:var(--body)">Anticarbon</span><h4>Newspaper bag with an ad</h4>
+              <svg viewBox="0 0 90 90" aria-hidden="true"><defs><pattern id="nw2" width="8" height="6" patternUnits="userSpaceOnUse"><path d="M0 3 H6" stroke="#b9b9b2"/></pattern></defs><path d="M14 84 L19 24 H71 L76 84 Z" fill="url(#nw2)" stroke="#111" stroke-width="1.2"/><path d="M32 24 Q45 4 58 24" fill="none" stroke="#111" stroke-width="1.2"/><rect x="26" y="42" width="38" height="26" rx="2" fill="#fff1b8" stroke="#111"/><text x="45" y="59" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AD</text></svg>
+              <div class="cost"><span class="l">Cost to the shop</span><div class="meter" style="background:rgba(255,255,255,.7)"><i style="width:0%"></i></div></div>
+              <span class="tag">Free to the shop</span>
+              The advertiser pays, so the shop gets the bags at no cost.
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted)">The bars compare costs in broad terms, not measured prices.</p>
+
+          <div class="ban">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" fill="#fbdde8" stroke="#111" stroke-width="1.4"/><path d="M22 46 Q14 30 22 18 L26 22 Q32 16 38 22 L42 18 Q50 30 42 46 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M12 12 L52 52" stroke="#111" stroke-width="2"/></svg>
+            <div><span class="k">The opening</span><b>The Supreme Court banned thin plastic bags in Delhi</b><p>It was the push we needed. We seized the moment to get people to use newspaper bags instead. But the bags were still too expensive.</p></div>
+          </div>
+        </section>
+
+        <section class="sec" id="idea">
+          <div class="sec-head"><span class="k">02</span><h2>The idea: let advertisers pay for the bag</h2></div>
+          <p class="lead2">We printed advertisements on the newspaper bags. The ad money brought the cost of each bag down, so shopkeepers could get them for free, and a free bag can beat plastic on price.</p>
+          <figure>
+            <div class="loop4">
+              <div class="lp"><div class="box bg-yellow"><b>Advertiser</b><span>A local business pays to put its ad on bags.</span></div><span class="gets">Gets: its ad in front of the right customers</span></div>
+              <div class="lp"><div class="box bg-lilac"><b>Anticarbon</b><span>Prints the ads and supplies the bags.</span></div><span class="gets">Gets: ad revenue that covers the bags</span></div>
+              <div class="lp"><div class="box bg-pink"><b>Women in Delhi's slums</b><span>Make the bags from newspapers, in different sizes.</span></div><span class="gets">Gets: paid for every bag</span></div>
+              <div class="lp"><div class="box bg-green"><b>Shopkeeper</b><span>Hands the bags to customers instead of plastic.</span></div><span class="gets">Gets: bags at no cost</span></div>
+            </div>
+            <div class="loop-back" aria-hidden="true"><span>customers carry the ad home</span></div>
+          </figure>
+
+          <h3>Placing ads where the right customers shop</h3>
+          <p>A physical market is well sorted: certain kinds of customers go to certain kinds of shops. So an advertiser could choose the local stores where its desired customers shop, and put its ad on the bags those stores hand out.</p>
+          <figure>
+            <div class="market" role="img" aria-label="A street of local shops. Each shop draws a different kind of customer, so each carries ads aimed at those customers.">
+              <span class="k">One market street</span>
+              <div class="street">
+                <div class="shop" style="--c:var(--green)"><div class="front"><div class="awn"></div><div class="name">Grocer</div></div><span class="who">Families buying daily needs</span><span class="ad">ad for a local clinic</span></div>
+                <div class="shop" style="--c:var(--blue)"><div class="front"><div class="awn"></div><div class="name">Stationer</div></div><span class="who">Students</span><span class="ad">ad for a coaching class</span></div>
+                <div class="shop" style="--c:var(--pink)"><div class="front"><div class="awn"></div><div class="name">Boutique</div></div><span class="who">Shoppers buying clothes</span><span class="ad">ad for a salon</span></div>
+                <div class="shop" style="--c:var(--yellow)"><div class="front"><div class="awn"></div><div class="name">Pharmacy</div></div><span class="who">Patients and caregivers</span><span class="ad">ad for a diagnostic lab</span></div>
+              </div>
+              <div class="road"></div>
+            </div>
+            <figcaption>An illustration of the targeting idea. The shops and ads are examples, not real clients.</figcaption>
+          </figure>
+        </section>
+
+        <section class="sec" id="pilot">
+          <div class="sec-head"><span class="k">03</span><h2>Why it didn't win</h2></div>
+          <p class="lead2">The idea did not scale. It died in the pilot. People never stopped using plastic bags.</p>
+          <div class="whys">
+            <div class="why"><span class="ic bg-pink"><svg viewBox="0 0 24 24"><path d="M7 21 Q3 12 7 5 L9 7 Q12 4 15 7 L17 5 Q21 12 17 21 Z"/></svg></span><div><h4>Plastic is too useful</h4><p>I underestimated how useful plastic bags are. They are dirt cheap and fit in a small space. After the ban, the market quickly found other ways to keep using them.</p></div></div>
+            <div class="why"><span class="ic bg-yellow"><svg viewBox="0 0 24 24"><path d="M4 20 L6 8 H18 L20 20 Z"/><path d="M10 13 L14 17 M14 13 L10 17"/></svg></span><div><h4>Bags that broke under real loads</h4><p>Small local shops mostly sell everyday goods such as groceries. For heavy loads like vegetables, a newspaper bag had to be very big, and it could not carry anything liquid or likely to leak.</p></div></div>
+            <div class="why"><span class="ic bg-lilac"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 9 L7 4 H17 L20 9"/><path d="M9 14 H15"/></svg></span><div><h4>Only small local shops would take part</h4><p>A shop that sells certain brands will not promote a different brand whose products it does not sell. That limited the idea to very local shops.</p></div></div>
+            <div class="why"><span class="ic bg-blue"><svg viewBox="0 0 24 24"><path d="M6 3 H15 L19 7 V21 H6 Z"/><path d="M15 3 V7 H19"/></svg></span><div><h4>Not appealing to look at</h4><p>The newspaper bags were not attractive enough for people to choose them over plastic.</p></div></div>
+            <div class="why"><span class="ic bg-gray"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/><path d="M17 4 L21 8 M21 4 L17 8"/></svg></span><div><h4>Few paying clients</h4><p>I did not know much about how to run a business at the time, and it was hard to win advertising clients.</p></div></div>
+          </div>
+        </section>
+
+        <section class="sec" id="exit">
+          <div class="sec-head"><span class="k">04</span><h2>The exit</h2></div>
+          <p>I closed Anticarbon after the pilot. I sold all the newspaper bags to a not-for-profit. That let us break even and pay the women who had made the bags.</p>
+          <div class="exit">
+            <div style="--c:var(--gray)"><b>Pilot ends</b>The idea does not scale.</div>
+            <div style="--c:var(--yellow)"><b>Stock sold</b>All newspaper bags go to a not-for-profit.</div>
+            <div style="--c:var(--green)"><b>Break even</b>The women who made the bags are paid.</div>
+          </div>
+          <a class="next" href="#" data-site-link="build"><span class="l">Back to</span><span class="t">I build →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['problem', 'idea', 'pilot', 'exit'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

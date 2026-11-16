@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Protester on a Bicycle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="The Protester on a Bicycle: how AI collapsed the cost of dissent. An essay by Shashank Mishra and Dr. Anushi Tiwary.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Protester on a Bicycle additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.hero h1 { font-size: clamp(42px, 6.6vw, 80px); }
+.standfirst { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.epi { max-width: 720px; text-align: left; }
+.epi p { font-size: 20px; }
+.cyc { display: block; width: 100%; height: auto; margin-top: 8px; }
+.prose-col { display: flex; flex-direction: column; gap: 20px; }
+.prose-col p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.prose-col p.open::first-letter { float: left; font-size: 64px; line-height: .9; font-weight: 300; padding: 6px 10px 0 0; color: var(--ink); }
+
+/* Educate, agitate, organise */
+.eao { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.eao > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); line-height: 1.5; position: relative; }
+.eao .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.eao h4 { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; color: var(--ink); }
+.eao .cost { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 10px; }
+.eao .row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 12px; }
+.eao .track { height: 10px; border-radius: 5px; background: rgba(255,255,255,.7); position: relative; overflow: hidden; }
+.eao .track i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--ink); }
+.eao .verdict { align-self: flex-start; }
+@media (max-width: 760px) { .eao { grid-template-columns: 1fr; } }
+
+/* Then and now */
+.tn { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tn > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.tn .k11 { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.tn ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tn li { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+.tn .big { font-size: 34px; font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.tn p { font-size: 13.5px; color: var(--body); }
+@media (max-width: 640px) { .tn { grid-template-columns: 1fr; } }
+
+/* Locomotion ladder */
+.ladder { display: flex; flex-direction: column; gap: 8px; max-width: 680px; }
+.ladder .row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 14px; align-items: center; font-size: 14px; }
+.ladder .row span:first-child { color: var(--ink); }
+.ladder .b { height: 22px; border-radius: 0 5px 5px 0; border: 1px solid var(--ink); }
+.ladder .row.top span:first-child { font-weight: 600; }
+@media (max-width: 520px) { .ladder .row { grid-template-columns: 120px minmax(0, 1fr); } }
+
+.about { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--rule); padding-top: 16px; font-size: 14px; color: var(--body); max-width: 680px; }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="write" aria-label="Back to I write"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="write">I write</a> / Society</span>
+    <span class="right">5 min read</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Essay · Politics and technology</span>
+          <h1>The Protester on a <em>Bicycle</em></h1>
+        </div>
+        <div>
+          <p class="lede">How AI Collapsed the Cost of Dissent</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Authors</span><span class="v">Shashank Mishra and Dr. Anushi Tiwary</span></div>
+        <div><span class="l">Year</span><span class="v">2026</span></div>
+        <div><span class="l">Length</span><span class="v">1,048 words</span></div>
+        <div><span class="l">Subject</span><span class="v">Protest, generative AI and Indian democracy</span></div>
+      </div>
+      <!-- A line of protesters walking, overtaken by one on a bicycle carrying a phone. -->
+      <svg class="cyc" viewBox="0 0 1112 190" role="img" aria-label="Line drawing: a row of figures walking with placards, and ahead of them a figure on a bicycle.">
+        <g fill="none" stroke="#111" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <defs><g id="walker">
+            <circle cx="0" cy="96" r="9"/>
+            <path d="M0 105 V146 M0 146 L-10 186 M0 146 L10 186 M0 116 L-14 136 M0 116 L12 92 L12 60"/>
+            <rect x="-8" y="36" width="40" height="26" rx="2" fill="#fff"/>
+          </g></defs>
+          <use href="#walker" x="50"/>
+          <use href="#walker" x="140"/>
+          <use href="#walker" x="230"/>
+          <use href="#walker" x="320"/>
+          <use href="#walker" x="410"/>
+          <g transform="translate(780 0)">
+            <circle cx="0" cy="150" r="34"/>
+            <circle cx="150" cy="150" r="34"/>
+            <circle cx="0" cy="150" r="2" fill="#111"/>
+            <circle cx="150" cy="150" r="2" fill="#111"/>
+            <path d="M0 150 L52 150 L100 100 L40 100 Z M52 150 L36 86 M28 86 H46 M100 100 L150 150 M100 100 L94 80 L112 76"/>
+            <circle cx="62" cy="40" r="10"/>
+            <path d="M58 50 L44 92 L52 150 M56 62 L96 80 M44 92 L84 120"/>
+            <rect x="94" y="64" width="14" height="22" rx="2" fill="#fff1b8"/>
+          </g>
+        </g>
+        <g stroke="#111" stroke-width="1" opacity=".35"><path d="M640 120 H720 M610 140 H700 M650 160 H730"/></g>
+        <line x1="0" y1="189.5" x2="1112" y2="189.5" stroke="#111"/>
+      </svg>
+    </section>
+
+    <div class="epi">
+      <p>For most of political history, unions like conglomerates held the power of creating the protests because they bore the fixed cost associated with protests. Generative AI lowered the cost to educate and agitate and hence we can expect faster CJP-like protests. But the unhurried tempo of protests gave apprenticeship opportunities for young leaders to emerge and organise well. The fast protests might erode that ability in democracy.</p>
+    </div>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#intro"><span>01</span><span>Introduction</span></a>
+          <a href="#educating"><span>02</span><span>The cost of educating</span></a>
+          <a href="#agitating"><span>03</span><span>The cost of agitating</span></a>
+          <a href="#bicycle"><span>04</span><span>Protester with chips and algorithms</span></a>
+          <a href="#organise"><span>05</span><span>We are yet to organise</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="intro">
+          <div class="prose-col">
+            <p class="open">After the lathis rained at Jantar Mantar, more so-called cockroaches began to pop out onto the streets, and the cockroach win started to look certain.</p>
+            <p>Protests have long been the medium through which citizens show dissent toward the state's coercion managers. A protest is what happens when a social movement moves beyond agitation: a demonstration of mass dissent by the citizenry, demanding change in the system, or of the system.</p>
+            <p>Ambedkar popularised the three steps by which such movements are built: educate, agitate, organise. It takes vanguards to build knowledge and educate themselves, and then to spark a mental and social awakening among the masses, rousing a consciousness that often lies dormant.</p>
+          </div>
+          <figure>
+            <div class="eao">
+              <div class="bg-blue">
+                <span class="n">01</span><h4>Educate</h4>
+                <span>Search for the documents and process them.</span>
+                <div class="cost"><div class="row"><span>Before AI</span><span class="track"><i style="width:90%"></i></span></div><div class="row"><span>With AI</span><span class="track"><i style="width:8%"></i></span></div></div>
+                <span class="verdict">Cost collapsed</span>
+              </div>
+              <div class="bg-pink">
+                <span class="n">02</span><h4>Agitate</h4>
+                <span>Turn the truth into slogans, posts and creatives, again and again.</span>
+                <div class="cost"><div class="row"><span>Before AI</span><span class="track"><i style="width:95%"></i></span></div><div class="row"><span>With AI</span><span class="track"><i style="width:10%"></i></span></div></div>
+                <span class="verdict">Cost collapsed</span>
+              </div>
+              <div class="bg-gray">
+                <span class="n">03</span><h4>Organise</h4>
+                <span>Train leaders, form coalitions, keep the agenda fixed.</span>
+                <div class="cost"><div class="row"><span>Before AI</span><span class="track"><i style="width:85%"></i></span></div><div class="row"><span>With AI</span><span class="track"><i style="width:85%"></i></span></div></div>
+                <span class="verdict">Still slow</span>
+              </div>
+            </div>
+            <figcaption>The essay's argument in one picture. Ambedkar's three steps, and what generative AI did to the cost of each. The bars are illustrative, not measured.</figcaption>
+          </figure>
+          <div class="prose-col">
+            <p>But for most of political history, the ability to turn public anger into a movement was rationed by craft. Someone had to design, write, print, code or film. Traditionally that cost was borne by unions, political parties, newsrooms and civil-society organisations. And because they paid the cost, they also acquired the power to decide which grievances entered public discourse, and which remained private.</p>
+            <p>The CJP protest was not just different in its satirical style. It was fast and, to begin with, backed by no organisation. This was possible because it is now cheaper to educate and agitate with generative AI.</p>
+          </div>
+        </section>
+
+        <section class="sec" id="educating">
+          <div class="sec-head"><span class="k">02</span><h2>The cost of educating</h2></div>
+          <div class="prose-col">
+            <p>Responsible vanguards search for relevant materials like tender documents, committee reports, RTI replies, court affidavits, and make themselves politically aware by reading the classics or not so classics. It's costly and time-consuming. With the emergence of the internet, this search cost came down, but generative AI has changed the game. One expresses the intention to the AI models and gets relevant documents on the screen with a click.</p>
+            <p>Then comes the processing cost. Truth often stays buried under the volume of documents, time-consuming for humans to dig out. Not for an AI bot. An AI model, with its embedded encodings, can scan fast and give a summary of what matters in seconds. Gone are the days when fact-finding was a superhuman capability. Generative AI has collapsed that cost. The marginal cost of understanding a four-hundred-page document has fallen close to zero. A single person can now interrogate an archive that a decade ago required a department.</p>
+          </div>
+          <div class="pull"><p>A single person can now interrogate an archive that a decade ago required a department.</p></div>
+          <div class="prose-col">
+            <p>For most of modern politics, the search and processing cost is why the vanguard was almost always attached to an institution. An unaffiliated citizen with a grievance and a laptop could seldom afford it, so the grievance stayed private. Generative AI has severed that tie: the vanguard no longer needs the institution that once funded it.</p>
+          </div>
+        </section>
+
+        <section class="sec" id="agitating">
+          <div class="sec-head"><span class="k">03</span><h2>The cost of agitating</h2></div>
+          <div class="prose-col">
+            <p>To agitate, the found truth must be communicated, often wrapped in bite-sized packets of knowledge. The punchlines must be turned into slogans, social media posts, and creatives. One learned person can create such creatives once and post them online, but the content-hungry social media algorithms will not promote a one-shot post to many. To reach a large audience, one needs to create multiple graphics, memes, videos, and posts, and feed them to the algorithms regularly to go viral. Agitation needs virality, and it is costly. This barrier turned political mobilisation into the preserve of a few organisations - an oligopoly protected by fixed costs. Only the firms that could pay them could enter.</p>
+            <p>AI tools have taken a hammer to that barrier. It would have taken weeks and lakhs of rupees for Dipke, the founder of CJP, to design the graphics, code the website and host it online. And by the time it would go online, the small time-window of relevance would have been lost. It would take enormous human-hours from a team to keep social media flooded until it trends and the masses join. What once required a designer, a developer and three weeks now requires an afternoon. And outrage has a shelf life measured in days. An afternoon is the difference between a movement and a forgotten post.</p>
+          </div>
+          <figure>
+            <div class="tn">
+              <div class="bg-soft">
+                <span class="k11">Before</span>
+                <ul><li>A designer</li><li>A developer</li><li>Lakhs of rupees</li></ul>
+                <span class="big">Three weeks</span>
+                <p>By then, the window of relevance has closed.</p>
+              </div>
+              <div class="bg-yellow">
+                <span class="k11">With generative AI</span>
+                <ul><li>One person</li><li>AI tools</li></ul>
+                <span class="big">An afternoon</span>
+                <p>While the outrage is still alive.</p>
+              </div>
+            </div>
+          </figure>
+          <div class="prose-col">
+            <p>In every previous digital movement, ordinary participation meant consuming somebody else's symbols by sharing a poster or changing a profile picture in solidarity. This time the supporters became producers. A sixteen-year-old in a remote city could generate a campaign poster with her own face on it in thirty seconds. She did not merely support the cockroaches. She became one, publicly, at no cost.</p>
+          </div>
+        </section>
+
+        <section class="sec" id="bicycle">
+          <div class="sec-head"><span class="k">04</span><h2>Protester with chips and algorithms</h2></div>
+          <div class="prose-col">
+            <p>In 1973, Scientific American published an article saying that salmon and horses are among nature's more efficient locomotors. In that list, humans lagged significantly. But interestingly, the article demonstrated that if we put a human on a bicycle, they beat every standalone locomotor, natural or man-made, and stand at the top of the list.</p>
+          </div>
+          <figure>
+            <div class="ladder">
+              <div class="row"><span>Human, walking</span><span class="b bg-gray" style="width:34%"></span></div>
+              <div class="row"><span>Horse</span><span class="b bg-gray" style="width:66%"></span></div>
+              <div class="row"><span>Salmon</span><span class="b bg-gray" style="width:66%"></span></div>
+              <div class="row top"><span>Human on a bicycle</span><span class="b bg-yellow" style="width:100%"></span></div>
+            </div>
+            <figcaption>Efficiency of locomotion. Schematic: the bars show only where the human on a bicycle stands against the others, not real values.</figcaption>
+          </figure>
+          <div class="prose-col">
+            <p>Something similar has happened to the modern-day protester. Today's young protester is powered by chips and algorithms. She is not necessarily more courageous than the protesters who came before her, but she can educate and agitate faster than any before her in Indian democracy. So fast that India's professional politicians could not anticipate it. By the time they responded, the wildfire was already in the woods.</p>
+          </div>
+        </section>
+
+        <section class="sec" id="organise">
+          <div class="sec-head"><span class="k">05</span><h2>We are yet to organise</h2></div>
+          <div class="prose-col">
+            <p>If we are witnessing a protest on the streets, that means we have educated ourselves and agitated well. But to bring complete social change, we also need to organise well and keep the agenda fixed until the advent of a systemic change.</p>
+            <p>Historically, movements grew slowly, and that pace acted as an apprenticeship for training new leaders, forming coalitions, and building the intellectual capacity to negotiate. Using generative AI, protests could be created quickly with precision. CJP made a precise demand for the resignation of the education minister, and achieved it in a short time. But can this movement, without enough institutional capacity-building, bring strong educational reforms? Slow reform by the parliament is the nature of democracy, and it should be that way to avoid unintended consequences. To keep the parliament on the agenda, we need powerful and sustained pressure on the executives of democracy that requires organised movements with capacity.</p>
+            <p>The CJP protest has made us realise that chips and algorithms are the arms and ammunition of Gen Z. We should not be surprised to see more such agitations in future. But a bicycle can carry you to the gate; somebody still has to stand there and hold it.</p>
+          </div>
+          <div class="pull"><p>A bicycle can carry you to the gate; somebody still has to stand there and hold it.</p></div>
+          <div class="about">
+            <p>Shashank Mishra is a recent MPA graduate of Cornell University and a co-founder of Samavesh, a policy think tank. Anushi Tiwary is a doctoral candidate at the Gokhale Institute of Politics and Economics, Pune. Views are personal.</p>
+          </div>
+          <a class="next" href="#" data-site-link="write"><span class="l">Back to</span><span class="t">I write →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['intro', 'educating', 'agitating', 'bicycle', 'organise'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>

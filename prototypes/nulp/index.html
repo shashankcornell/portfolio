@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NULP Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+</head>
+<body>
+<style>
+body{margin:0}
+/* Layout: a tour bar on top, then a browser-style frame holding the clickable app. One light look, black and white with pastel accents, to match the portfolio site. */
+:root{
+  --ink:#111111; --body:#3d3d3b; --muted:#76766f; --line:#d9d9d4; --soft:#f3f3f0; --bg:#ffffff;
+  --blue:#d9e8ff; --green:#d6f2df; --pink:#fbdde8; --yellow:#fff1b8; --lilac:#e8e1ff;
+  --font:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--font);font-size:14px;line-height:1.45}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.tour{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tour .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tour b{font-size:16px;letter-spacing:-.01em}
+.tour small{color:var(--muted);font-size:12px}
+.tour .c{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tour select{height:34px;border:1px solid var(--line);border-radius:6px;padding:0 8px;background:var(--bg);max-width:100%}
+.frame{border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--bg)}
+.chrome{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--soft)}
+.dots{display:flex;gap:5px;flex:none}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.url{flex:1;min-width:0;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;font-size:16px;padding:0 4px;color:var(--muted)}
+#app{min-height:620px;display:flex;flex-direction:column}
+.note{font-size:12px;color:var(--muted)}
+
+/* App */
+.nav{display:flex;align-items:center;gap:4px;padding:0 12px;height:48px;border-bottom:1.5px solid var(--ink);overflow-x:auto;flex:none;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.logo{font-weight:700;font-size:15px;margin-right:10px;letter-spacing:.02em;border:0;background:none;padding:0}
+.nl{border:0;background:none;padding:6px 9px;border-radius:6px;color:var(--muted);font-size:13px;white-space:nowrap}
+.nl:hover{color:var(--ink);background:var(--soft)}
+.nl.on{color:var(--ink);font-weight:600}
+.spacer{flex:1}
+.av{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);border:0;font-size:12px;font-weight:600;flex:none}
+.menu{position:absolute;right:12px;top:52px;background:var(--bg);border:1.5px solid var(--ink);border-radius:10px;padding:6px;display:flex;flex-direction:column;min-width:200px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.menu button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:13px}
+.menu button:hover{background:var(--soft)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.appbody{position:relative;flex:1;display:flex;flex-direction:column;min-height:0}
+.pg{padding:22px;display:flex;flex-direction:column;gap:14px;flex:1;min-width:0}
+.narrow{max-width:460px;width:100%;margin:0 auto}
+.split{display:flex;flex:1;min-height:0}
+.side{width:190px;flex:none;border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.side button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:13px;color:var(--body)}
+.side button:hover{background:var(--soft)}
+.side button.on{background:var(--ink);color:var(--bg);font-weight:600}
+.side .gr{font-size:10px;letter-spacing:.1em;font-weight:700;color:var(--muted);padding:12px 10px 4px}
+h1{font-size:24px;line-height:1.2;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:16px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+h2 .lk{font-size:12px;font-weight:400}
+p{margin:0}
+.mut{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.lk{border:0;background:none;padding:0;text-decoration:underline;text-underline-offset:2px;color:var(--ink);font-size:13px}
+.btn{height:38px;border-radius:7px;background:var(--ink);color:var(--bg);border:1.5px solid var(--ink);font-weight:600;font-size:13px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:hover{opacity:.88}
+.btn.o{background:var(--bg);color:var(--ink)}
+.btn.sm{height:30px;padding:0 12px;font-size:12px}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.btn.full{width:100%}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;min-width:0;flex:1}
+.in{height:38px;border:1px solid #a9a9a3;border-radius:7px;padding:0 11px;background:var(--bg);font-weight:400;font-size:13px;width:100%}
+textarea.in{height:auto;min-height:70px;padding:9px 11px;resize:vertical}
+.chip{height:30px;border-radius:15px;border:1px solid #a9a9a3;background:var(--bg);padding:0 13px;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:8px 0;color:var(--muted);font-size:13px;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+.card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);text-align:left;padding:0;display:flex;flex-direction:column}
+button.card:hover{border-color:var(--ink)}
+.card .im{height:84px;background:var(--soft);display:flex;align-items:flex-end;padding:8px}
+.card .tx{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.card b{font-size:13px;line-height:1.3}
+.tag{font-size:11px;color:var(--muted)}
+.pill{font-size:11px;padding:3px 9px;border-radius:10px;background:var(--soft);white-space:nowrap;display:inline-block}
+.box{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.fill{border:0}
+.item{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);text-align:left;width:100%}
+button.item:hover{border-color:var(--ink)}
+.item .th{width:56px;height:42px;border-radius:6px;background:var(--soft);flex:none}
+.item .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.item b{font-size:13px}
+.hero{border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.dom{height:86px;border-radius:10px;border:0;text-align:left;padding:12px;display:flex;align-items:flex-end;font-weight:600;font-size:13px}
+.dom:hover{outline:1.5px solid var(--ink)}
+.bar{height:7px;border-radius:4px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.stat{border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--body);flex:1;min-width:120px}
+.stat b{font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tblw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;border-bottom:1px solid var(--ink);padding:8px 10px 8px 0}
+td{border-bottom:1px solid var(--line);padding:10px 10px 10px 0;vertical-align:middle}
+.opt{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:11px 12px;background:var(--bg);text-align:left;width:100%;font-size:13px}
+.opt.on{border-color:var(--ink);background:var(--soft)}
+.dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink);flex:none}
+.opt.on .dot{background:var(--ink)}
+.otp{display:flex;gap:8px}
+.otp input{width:46px;height:52px;text-align:center;font-size:20px;border:1px solid #a9a9a3;border-radius:8px}
+.msgs{display:flex;flex-direction:column;gap:8px;flex:1}
+.msg{max-width:72%;padding:9px 12px;border-radius:12px;font-size:13px}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--bg)}
+.msg.them{align-self:flex-start;background:var(--soft)}
+.modal{position:absolute;inset:0;background:rgba(17,17,17,.28);display:flex;align-items:center;justify-content:center;padding:16px;z-index:8}
+.modal .box{background:var(--bg);border:1.5px solid var(--ink);max-width:420px;width:100%}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;z-index:9;white-space:nowrap}
+.player{height:230px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center}
+.play{width:0;height:0;border-left:26px solid var(--muted);border-top:16px solid transparent;border-bottom:16px solid transparent}
+.mod{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;border:0;background:none;text-align:left;width:100%;font-size:13px}
+.mod:hover{background:var(--soft)}
+.mod.on{background:var(--blue);font-weight:600}
+.ck{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px}
+.ck.done{background:var(--ink);color:var(--bg)}
+.cert{border:1.5px solid var(--ink);border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;max-width:440px;width:100%}
+.cert .k{font-size:11px;letter-spacing:.14em;color:var(--muted)}
+.cert .nm{font-size:22px;font-weight:700}
+.mono{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.res{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.res .bar{height:12px;border-radius:6px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:120px;border-bottom:1px solid var(--line)}
+.bars i{flex:1;background:var(--ink);border-radius:3px 3px 0 0;display:block}
+.flagged{background:var(--pink)}
+@media (max-width:720px){
+  .side{display:none}
+  .g3{grid-template-columns:1fr}
+  .pg{padding:16px}
+  h1{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="tour">
+    <div class="t">
+      <b>National Urban Learning Platform</b>
+    </div>
+    <div class="c">
+      <label for="jump" class="note">Jump to</label>
+      <select id="jump" aria-label="Jump to a screen"></select>
+      <button class="btn o sm" id="reset" type="button">Start over</button>
+    </div>
+  </div>
+  <div class="frame">
+    <div class="chrome">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <button class="back" id="backBtn" type="button" aria-label="Back">‹</button>
+      <div class="url" id="url">nulp.niua.org</div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const PALE=['var(--blue)','var(--green)','var(--pink)','var(--yellow)','var(--lilac)'];
+const DOMAINS=['Municipal finance','Water and sanitation','Urban planning','Governance','Environment and climate','Urban mobility','Housing','Public health'];
+const SUBS={'Municipal finance':['Budgeting','Own-source revenue','Property tax','Municipal bonds','Accrual accounting']};
+const CONTENT=[
+ {id:'osr',t:'Own-source revenue for ULBs',d:'Municipal finance',k:'Course',by:'NIUA',mods:['Why own revenue matters','Property tax and user charges','Model by-laws','Case study: doubling collection','Final assessment']},
+ {id:'bud',t:'Municipal budgeting basics',d:'Municipal finance',k:'Course',by:'A content partner',mods:['The budget cycle','Revenue and capital accounts','Outcome budgets','Final assessment']},
+ {id:'acc',t:'Accrual accounting',d:'Municipal finance',k:'Course',by:'A content partner',mods:['Cash versus accrual','Double entry for cities','Opening balance sheet','Final assessment']},
+ {id:'rfp',t:'Model RFP for solid waste collection',d:'Water and sanitation',k:'Document',by:'A state department'},
+ {id:'go',t:'Government order on user charges',d:'Municipal finance',k:'Document',by:'A state department'},
+ {id:'fsm',t:'Faecal sludge management',d:'Water and sanitation',k:'Course',by:'A content partner',mods:['What FSM is','Planning a treatment plant','Contracts and operators','Final assessment']},
+ {id:'heat',t:'Heat action plans for cities',d:'Environment and climate',k:'Video',by:'An international organisation'},
+ {id:'tod',t:'Transit-oriented development',d:'Urban mobility',k:'Course',by:'A national think tank',mods:['Principles','Zoning near stations','Financing','Final assessment']},
+ {id:'bond',t:'Issuing a municipal bond',d:'Municipal finance',k:'Document',by:'A content partner'}
+];
+const QUIZ=[
+ {q:'Which of these is an own-source revenue for a municipality?',o:['Central finance commission grant','Property tax','State devolution','A bank loan'],a:1},
+ {q:'User charges are best set to recover…',o:['Nothing; services should be free','The cost of providing the service','Twice the cost','Whatever the council decides each year'],a:1},
+ {q:'A model by-law helps a city mainly by…',o:['Replacing the council','Giving a tested legal template to adapt','Raising grants','Cutting staff'],a:1}
+];
+const PEOPLE=[
+ {id:'p1',n:'R. Iyer',r:'Finance officer',c:'City A'},
+ {id:'p2',n:'S. Khan',r:'Executive engineer',c:'City B'},
+ {id:'p3',n:'M. Das',r:'Commissioner',c:'City D'},
+ {id:'p4',n:'K. Rao',r:'Health officer',c:'City E'},
+ {id:'p5',n:'T. Bose',r:'Assistant commissioner',c:'City C'}
+];
+
+function fresh(){return{
+ screen:'login',hist:[],authed:false,menu:false,modal:null,toast:null,
+ user:{n:'A. Sharma',r:'Revenue officer',c:'City of Example'},
+ prefs:['Municipal finance','Water and sanitation'],subs:['Property tax'],
+ filter:{type:'All',dom:null},query:'',domain:'Municipal finance',
+ course:'osr',enrolled:{},progress:{},mod:0,answers:{},attempts:3,lastScore:null,
+ certs:[{t:'Municipal budgeting basics',by:'NIUA',d:'30 Mar'}],
+ history:[{t:'Municipal budgeting basics',d:'02 Mar',p:100},{t:'Accrual accounting',d:'14 Apr',p:60}],
+ tab:{},
+ conns:['p1','p2'],sent:[],requests:['p5'],blocked:[],chatWith:'p1',
+ chats:{p1:[['them','How did your city move to accrual accounting so fast?'],['me','We used the state template. Sharing it now.'],['them','Thank you, this is what I needed for Friday.']]},
+ threads:[
+  {id:'t1',t:'How to raise property tax collection without a rate hike?',by:'Revenue officer, City C',d:'Municipal finance',res:true,up:34,rep:[['Finance officer, City A','We mapped every property with GIS first. Coverage rose before rates did.'],['Commissioner, City D','Door-to-door demand notices with a QR payment link helped us.']]},
+  {id:'t2',t:'Template for a municipal bond offer document',by:'Finance officer, City A',d:'Municipal finance',res:false,up:11,rep:[['Urban planner, State department','The SEBI framework has a checklist. I can share our draft.']]},
+  {id:'t3',t:'Budgeting for climate-resilient drains',by:'Executive engineer, City B',d:'Environment and climate',res:false,up:19,rep:[]}
+ ],thread:'t1',
+ events:[
+  {id:'e1',t:'Webinar: Issuing municipal bonds',day:'12',mon:'AUG',time:'3:00 pm',d:'Municipal finance',past:false,reg:false},
+  {id:'e2',t:'Live training: Faecal sludge management',day:'19',mon:'AUG',time:'11:00 am',d:'Water and sanitation',past:false,reg:false},
+  {id:'e3',t:'Panel: Heat action plans',day:'28',mon:'JUL',time:'4:00 pm',d:'Environment and climate',past:true,reg:true}
+ ],event:'e1',
+ polls:[
+  {id:'q1',t:'Which training format works best for your team?',o:['Short videos on the platform','Live online sessions','In-person workshops','Reference documents only'],v:[148,90,58,24],until:'30 Aug',st:'Live',mine:null},
+  {id:'q2',t:'Top priority for next year’s city budget',o:['Water supply','Roads','Solid waste','Housing'],v:[40,31,29,18],until:'05 Sep',st:'Live',mine:null},
+  {id:'q3',t:'Best time of day for live trainings',o:['Morning','Afternoon','Evening'],v:[210,95,60],until:'30 Jun',st:'Closed',mine:null}
+ ],poll:'q1',pick:null,
+ subsL:[
+  {id:'s1',t:'Rainwater harvesting by-law',th:'Water',st:'Draft',d:'09 Aug',who:'You'},
+  {id:'s2',t:'Ward-level budgeting',th:'Finance',st:'Changes asked',d:'02 Aug',who:'You'}
+ ],
+ review:[
+  {id:'r1',t:'Door-to-door segregation in 90 days',who:'City A',cat:'States / ULBs',th:'Solid waste',st:'Pending'},
+  {id:'r2',t:'Flood-risk mapping with drones',who:'University B',cat:'Academia',th:'Climate',st:'Pending'},
+  {id:'r3',t:'Low-cost air sensors',who:'Company C',cat:'Industry',th:'Environment',st:'Pending'}
+ ],rev:'r1',
+ voteL:[{id:'v1',t:'Smart parking pilot',n:198,mine:false},{id:'v2',t:'Street vending zones',n:287,mine:false},{id:'v3',t:'Lake restoration with CSR funds',n:412,mine:false}],
+ ws:[
+  {id:'w1',t:'Own-source revenue for ULBs',k:'Course',st:'Draft',d:'2h ago'},
+  {id:'w2',t:'Model RFP for solid waste',k:'Upload',st:'Sent back',d:'yesterday'},
+  {id:'w3',t:'Accrual accounting',k:'Course',st:'In review',d:'12 Aug'},
+  {id:'w4',t:'Heat action plan guide',k:'Upload',st:'In review',d:'10 Aug'},
+  {id:'w5',t:'Municipal budgeting basics',k:'Course',st:'Published',d:'Mar'},
+  {id:'w6',t:'Budget template',k:'Upload',st:'Published',d:'Feb'}
+ ],batches:[{c:'Municipal budgeting basics',n:'August cohort, State A',s:'01 Aug',e:'30 Sep',t:'Open to all'}],
+ editTitle:'New course'
+};}
+let S=fresh();
+
+const SCREENS={
+ login:['Log in','/webapp/login','Onboarding'],signup:['Sign up','/signup','Onboarding'],otp:['Verify OTP','/otp','Onboarding'],domains:['Choose domains','/webapp/selectPreference','Onboarding'],
+ home:['Home','/webapp/domainList','Discover'],explore:['Explore content','/webapp/contentList','Discover'],domain:['Domain page','/webapp/view-all','Discover'],search:['Search results','/webapp/contentList?query','Discover'],doc:['Document player','/webapp/pdf','Discover'],
+ course:['Course page','/webapp/joinCourse','Course'],player:['Player','/webapp/player','Course'],assess:['Assessment','/webapp/player','Course'],complete:['Course completed','/webapp/certificate','Course'],
+ profile:['Profile','/webapp/profile','My learning'],continue:['Continue learning','/webapp/continueLearning','My learning'],history:['Learning history','/webapp/learningHistory','My learning'],certs:['Certificates','/webapp/certificate','My learning'],prefs:['Change preferences','/webapp/selectPreference','My learning'],
+ connections:['Connections','/webapp/addConnections','Community'],chat:['Chat','/webapp/chat','Community'],forum:['Discussion forum','/discussion-forum','Community'],thread:['Forum thread','/discussion-forum/topic','Community'],
+ events:['All events','/webapp/allevents','Events'],event:['Event details','/webapp/eventDetails','Events'],eventsdash:['Events dashboard','/webapp/dashboard','Events'],
+ polls:['All polls','/webapp/pollList','Polls'],poll:['Poll details','/webapp/pollDetails','Polls'],pollnew:['Create poll','/webapp/createform','Polls'],polldash:['Poll dashboard','/webapp/pollDashboard','Polls'],
+ learn:['Call for entries','/webapp/learnathon','Learnathon'],learnform:['Upload submission','/webapp/learnathon','Learnathon'],mysubs:['My submissions','/webapp/mylernsubmissions','Learnathon'],reviewlist:['Review list','/webapp/lernreviewlist','Learnathon'],review:['Review a submission','/webapp/lernreviewlist','Learnathon'],vote:['Vote','/webapp/lernvotinglist','Learnathon'],learndash:['Learnathon dashboard','/webapp/learndashboard','Learnathon'],
+ wscreate:['Create content','/workspace/content/create','Workspace'],editor:['Content editor','/workspace/edit/course','Workspace'],wsdrafts:['Drafts and submitted','/workspace/content/draft','Workspace'],wsreview:['Up for review','/workspace/content/upForReview','Workspace'],wspub:['Published','/workspace/content/published','Workspace'],batches:['Course batches','/workspace/content/batches','Workspace'],
+ admin:['Admin dashboard','/webapp/dashboard','Admin and help'],report:['Learning report','/dashBoard/allDashboard','Admin and help'],help:['Help and FAQs','/webapp/help','Admin and help']
+};
+const PUBLIC=['login','signup','otp'];
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const C=id=>CONTENT.find(c=>c.id===id);
+const P=id=>PEOPLE.find(p=>p.id===id);
+const pale=i=>PALE[i%PALE.length];
+const go=(id,push=true)=>{if(push&&S.screen!==id)S.hist.push(S.screen);S.screen=id;S.menu=false;S.modal=null;draw(true)};
+const toast=m=>{S.toast=m;draw();clearTimeout(toast._t);toast._t=setTimeout(()=>{S.toast=null;draw()},2200)};
+
+function nav(on){
+ const L=[['home','Home'],['explore','Explore'],['forum','Discussions'],['connections','Connections'],['events','Events'],['polls','Polls'],['learn','Learnathon'],['wscreate','Workspace']];
+ return `<nav class="nav"><button class="logo" data-go="home">NULP</button>${L.map(([id,t])=>`<button class="nl ${on===id?'on':''}" data-go="${id}">${t}</button>`).join('')}<span class="spacer"></span><button class="av" data-act="menu" aria-label="Profile menu">AS</button></nav>`+
+ (S.menu?`<div class="menu"><button data-go="profile">My profile</button><button data-go="continue">Continue learning</button><button data-go="certs">Certificates</button><button data-go="prefs">Change preferences</button><hr><button data-go="admin">Admin dashboard</button><button data-go="report">Learning report</button><button data-go="eventsdash">Events dashboard</button><hr><button data-go="help">Help and FAQs</button><button data-act="logout">Log out</button></div>`:'');
+}
+const side=(items,on)=>`<aside class="side">${items.map(i=>i[0]==='gr'?`<div class="gr">${i[1]}</div>`:`<button class="${on===i[0]?'on':''}" data-go="${i[0]}">${i[1]}</button>`).join('')}</aside>`;
+const meSide=on=>side([['profile','My profile'],['continue','Continue learning'],['history','Learning history'],['certs','Certificates'],['prefs','Change preferences']],on);
+const wsSide=on=>side([['wscreate','Create'],['wsdrafts','Drafts and submitted'],['wspub','Published'],['batches','Course batches'],['gr','REVIEWER'],['wsreview','Up for review']],on);
+const lnSide=on=>side([['learn','Call for entries'],['learnform','Upload submission'],['mysubs','My submissions'],['gr','REVIEWER'],['reviewlist','Review list'],['gr','EVERYONE'],['vote','Vote'],['gr','ADMIN'],['learndash','Dashboard']],on);
+const card=(c,i)=>`<button class="card" data-act="open" data-id="${c.id}"><div class="im" style="background:${pale(i)}"><span class="pill" style="background:var(--bg)">${c.k}</span></div><div class="tx"><b>${esc(c.t)}</b><span class="tag">${c.d} · ${c.by}</span></div></button>`;
+const tabs=(key,list)=>{const cur=S.tab[key]||list[0];return `<div class="tabs">${list.map(t=>`<button class="${cur===t?'on':''}" data-act="tab" data-k="${key}" data-v="${esc(t)}">${t}</button>`).join('')}</div>`};
+const curTab=(key,first)=>S.tab[key]||first;
+const prog=id=>{const c=C(id);if(!c.mods)return 0;const p=S.progress[id]||[];return Math.round(p.length/c.mods.length*100)};
+
+const V={};
+/* Onboarding */
+V.login=()=>`<nav class="nav"><span class="logo">NULP</span><span class="spacer"></span><button class="nl" data-go="help">Help</button></nav>
+<div class="pg"><div class="narrow col" style="gap:14px">
+ <div class="hero" style="background:var(--blue)"><b style="font-size:18px">Learn anytime, anywhere.</b><span class="mut" style="color:var(--body)">Courses, reference documents and a community of urban practitioners from every state.</span></div>
+ <h1>Welcome!</h1>
+ <form class="col" data-form="login">
+  <label class="f">Email ID or mobile number<input class="in" id="li-user" value="a.sharma@city.gov.in"></label>
+  <label class="f">Password<input class="in" id="li-pass" type="password" value="password"></label>
+  <div class="row" style="justify-content:flex-end"><button type="button" class="lk" data-act="toast" data-m="A reset link was sent to your email.">Forgot password?</button></div>
+  <button class="btn full" type="submit">Log in</button>
+ </form>
+ <div class="row" style="justify-content:center"><span class="mut">Don't have an account?</span><button class="lk" data-go="signup">Register here</button></div>
+</div></div>`;
+V.signup=()=>`<nav class="nav"><span class="logo">NULP</span><span class="spacer"></span><button class="lk" data-go="login">Already have an account? Log in</button></nav>
+<div class="pg"><form class="narrow col" data-form="signup">
+ <h1>Sign up</h1>
+ <div class="row"><label class="f">First name<input class="in" id="su-fn" required value="Asha"></label><label class="f">Last name<input class="in" id="su-ln" value="Sharma"></label></div>
+ <label class="f">Email address<input class="in" id="su-em" type="email" required value="a.sharma@city.gov.in"></label>
+ <label class="f">Mobile number<input class="in" id="su-mo" value="+91 98XXXXXX10"></label>
+ <div class="row"><label class="f">State<select class="in" id="su-st"><option>State A</option><option>State B</option></select></label><label class="f">City<select class="in" id="su-ci"><option>City of Example</option><option>City A</option></select></label></div>
+ <label class="f">Designation<select class="in" id="su-de"><option>Revenue officer</option><option>Finance officer</option><option>Executive engineer</option><option>Commissioner</option><option>Other designation</option></select></label>
+ <label class="f">Password<input class="in" id="su-pw" type="password" value="password"></label>
+ <label class="row" style="font-size:13px"><input type="checkbox" id="su-tc" checked> I agree to the terms and conditions</label>
+ <button class="btn full" type="submit">Continue</button>
+</form></div>`;
+V.otp=()=>`<nav class="nav"><span class="logo">NULP</span></nav>
+<div class="pg"><form class="narrow col" data-form="otp" style="gap:16px">
+ <h1>Verification code</h1>
+ <p class="mut">We sent a six-digit code to your email and mobile. Any six digits work in this prototype.</p>
+ <div class="otp">${[0,1,2,3,4,5].map(i=>`<input id="otp${i}" inputmode="numeric" maxlength="1" aria-label="Digit ${i+1}" value="${'482916'[i]}">`).join('')}</div>
+ <div class="row"><span class="mut">Didn't get it?</span><button type="button" class="lk" data-act="toast" data-m="A new code is on its way.">Resend OTP</button></div>
+ <button class="btn full" type="submit">Submit OTP</button>
+</form></div>`;
+const domainPicker=(saveLabel,skip)=>`<div class="pg"><div class="narrow col" style="max-width:620px;gap:16px">
+ <h1>Select your preferred domain</h1>
+ <p class="mut">We show you courses and documents from these domains first. You can change them later in your profile.</p>
+ <h2>Domain</h2>
+ <div class="row">${DOMAINS.map(d=>`<button class="chip ${S.prefs.includes(d)?'on':''}" data-act="pref" data-v="${esc(d)}">${d}</button>`).join('')}</div>
+ <h2>Sub-domain</h2>
+ <div class="row">${SUBS['Municipal finance'].map(d=>`<button class="chip ${S.subs.includes(d)?'on':''}" data-act="sub" data-v="${esc(d)}">${d}</button>`).join('')}</div>
+ <div class="row" style="margin-top:8px">${skip?`<button class="btn o" data-go="home">Skip</button>`:''}<button class="btn" data-act="savePrefs" ${S.prefs.length?'':'disabled'}>${saveLabel}</button></div>
+</div></div>`;
+V.domains=()=>`<nav class="nav"><span class="logo">NULP</span></nav>`+domainPicker('Save and go to home',true);
+V.prefs=()=>nav('')+`<div class="split">${meSide('prefs')}${domainPicker('Save preferences',false)}</div>`;
+
+/* Discover */
+V.home=()=>{const mine=CONTENT.filter(c=>S.prefs.includes(c.d));const pop=(mine.length?mine:CONTENT).filter(c=>c.k==='Course').slice(0,3);const recent=CONTENT.filter(c=>c.k!=='Course').slice(0,3);const ip=Object.keys(S.enrolled).filter(id=>prog(id)<100);
+return nav('home')+`<div class="pg">
+ <form class="hero" style="background:var(--blue)" data-form="search"><h1>What do you want to learn today?</h1><div class="row" style="flex-wrap:nowrap"><input class="in" id="q" placeholder="Search courses, documents, people" value="${esc(S.query)}" style="flex:1"><button class="btn" type="submit">Search</button></div></form>
+ ${ip.length?`<h2>Continue learning<button class="lk" data-go="continue">See all</button></h2>${ip.map(id=>`<button class="item" data-act="open" data-id="${id}"><div class="th"></div><div class="grow"><b>${esc(C(id).t)}</b><div class="bar"><i style="width:${prog(id)}%"></i></div></div><span class="mut">${prog(id)}%</span></button>`).join('')}`:''}
+ <h2>Filter by popular domain<button class="lk" data-go="explore">View all</button></h2>
+ <div class="g3">${(S.prefs.concat(DOMAINS.filter(d=>!S.prefs.includes(d)))).slice(0,3).map((d,i)=>`<button class="dom" style="background:${pale(i+1)}" data-act="domain" data-v="${esc(d)}">${d}</button>`).join('')}</div>
+ <h2>Popular courses<button class="lk" data-go="explore">View all</button></h2>
+ <div class="grid">${pop.map(card).join('')}</div>
+ <h2>Recently added<button class="lk" data-go="explore">View all</button></h2>
+ <div class="grid">${recent.map((c,i)=>card(c,i+2)).join('')}</div>
+ <button class="item" style="background:var(--yellow);border:0" data-go="events"><div class="grow"><b>Upcoming events</b><span class="mut" style="color:var(--body)">Webinar: Issuing municipal bonds · 12 Aug</span></div><span class="lk">See all</span></button>
+</div>`};
+V.explore=()=>{const types=['All','Course','Document','Video'];const list=CONTENT.filter(c=>(S.filter.type==='All'||c.k===S.filter.type)&&(!S.filter.dom||c.d===S.filter.dom));
+return nav('explore')+`<div class="split"><aside class="side" style="width:210px;gap:6px">
+ <div class="gr">CONTENT TYPE</div>${types.map(t=>`<button class="${S.filter.type===t?'on':''}" data-act="ftype" data-v="${t}">${t==='All'?'All content':t}</button>`).join('')}
+ <div class="gr">DOMAIN</div><button class="${!S.filter.dom?'on':''}" data-act="fdom" data-v="">All domains</button>${DOMAINS.slice(0,5).map(d=>`<button class="${S.filter.dom===d?'on':''}" data-act="fdom" data-v="${esc(d)}">${d}</button>`).join('')}
+ <button class="lk" style="margin:10px" data-act="fclear">Clear all</button></aside>
+ <div class="pg"><h1>Explore content</h1><div class="row"><span class="pill">${list.length} results</span>${S.filter.dom?`<span class="pill">${S.filter.dom}</span>`:''}${S.filter.type!=='All'?`<span class="pill">${S.filter.type}</span>`:''}</div>
+ <div class="grid">${list.map(card).join('')||'<p class="mut">No result found. Try clearing the filters.</p>'}</div></div></div>`};
+V.domain=()=>{const d=S.domain;const list=CONTENT.filter(c=>c.d===d);const courses=list.filter(c=>c.k==='Course'),docs=list.filter(c=>c.k!=='Course');
+return nav('explore')+`<div class="pg">
+ <div class="hero" style="background:var(--green)"><span class="mut" style="color:var(--body)">You are viewing contents for:</span><h1>${d}</h1></div>
+ ${SUBS[d]?`<div class="row">${['All sub-domains'].concat(SUBS[d]).map((s,i)=>`<span class="chip ${i===0?'on':''}">${s}</span>`).join('')}</div>`:''}
+ <h2>Courses</h2><div class="grid">${courses.map(card).join('')||'<p class="mut">No courses in this domain yet.</p>'}</div>
+ <h2>Reference documents</h2><div class="col">${docs.map(c=>`<button class="item" data-act="open" data-id="${c.id}"><div class="th" style="width:34px;height:42px"></div><div class="grow"><b>${esc(c.t)}</b><span class="tag">${c.k} · ${c.by}</span></div><span class="pill">Open</span></button>`).join('')||'<p class="mut">No documents in this domain yet.</p>'}</div>
+</div>`};
+V.search=()=>{const q=S.query.trim().toLowerCase();const hits=CONTENT.filter(c=>!q||(c.t+' '+c.d+' '+c.k).toLowerCase().includes(q));const th=S.threads.filter(t=>q&&t.t.toLowerCase().includes(q));
+return nav('explore')+`<div class="pg">
+ <form class="row" data-form="search" style="flex-wrap:nowrap"><input class="in" id="q" value="${esc(S.query)}" style="flex:1"><button class="btn" type="submit">Search</button></form>
+ <p class="mut">Showing results for: <b style="color:var(--ink)">${esc(S.query)||'everything'}</b> · ${hits.length+th.length} results</p>
+ ${hits.length+th.length?`<div class="col">${hits.map(c=>`<button class="item" data-act="open" data-id="${c.id}"><div class="th"></div><div class="grow"><b>${esc(c.t)}</b><span class="tag">${c.k} · ${c.d} · Published on NULP by ${c.by.toLowerCase()}</span></div></button>`).join('')}${th.map(t=>`<button class="item" data-act="thread" data-id="${t.id}"><div class="th" style="background:var(--lilac)"></div><div class="grow"><b>${esc(t.t)}</b><span class="tag">Discussion · ${t.rep.length} replies</span></div></button>`).join('')}</div>`:
+ `<div class="box" style="border-style:dashed;align-items:center;text-align:center;padding:30px"><b>No result found</b><span class="mut">Try a shorter word, or browse a domain.</span><div class="row">${DOMAINS.slice(0,3).map(d=>`<button class="chip" data-act="domain" data-v="${esc(d)}">${d}</button>`).join('')}</div></div>`}
+ <p class="mut">Try searching for “tax”, “bond” or “water”.</p>
+</div>`};
+V.doc=()=>{const c=C(S.course);return nav('explore')+`<div class="pg">
+ <div class="row"><h1 style="flex:1">${esc(c.t)}</h1><button class="btn o sm" data-act="toast" data-m="Saved to your downloads in the real platform.">Download</button></div>
+ <p class="mut">${c.k} · ${c.d} · Published on NULP by ${c.by.toLowerCase()}</p>
+ <div class="player" style="height:340px;flex-direction:column;gap:10px">${c.k==='Video'?'<div class="play"></div>':'<div class="col" style="width:60%;gap:8px">'+[90,70,85,60,80,40].map(w=>`<div class="bar" style="background:var(--line);width:${w}%"></div>`).join('')+'</div>'}<span class="mut">${c.k==='Video'?'Video player':'PDF viewer, page 1 of 12'}</span></div>
+ <div class="row"><span class="mut">Stuck on this?</span><button class="lk" data-act="connectCreator">Connect with creator</button><span class="mut">or</span><button class="lk" data-go="forum">ask in Discussions</button><span class="spacer"></span><button class="lk" data-act="flag">Flag this content</button></div>
+</div>`};
+
+/* Course */
+V.course=()=>{const c=C(S.course);const en=S.enrolled[c.id];return nav('explore')+`<div class="pg">
+ <div class="row" style="align-items:flex-start;gap:16px;flex-wrap:nowrap"><div style="width:150px;height:100px;border-radius:10px;background:var(--blue);flex:none"></div><div class="col" style="gap:6px"><h1>${esc(c.t)}</h1><span class="mut">${c.d} · Course · Published on NULP by ${c.by.toLowerCase()}</span><div class="row">${en?'<span class="pill" style="background:var(--green)">Enrolled</span>':''}<span class="pill">${c.mods.length} modules</span><span class="pill">Certificate on completion</span></div></div></div>
+ <div class="row">${en?`<button class="btn" data-go="player">${prog(c.id)?'Resume learning':'Start learning'}</button><button class="btn o" data-act="leave">Leave course</button>`:`<button class="btn" data-act="join">Join course</button>`}<button class="btn o" data-act="connectCreator">Connect with creator</button></div>
+ <div class="g3" style="align-items:start">
+  <div class="col" style="grid-column:span 2"><h2>Description</h2><p style="color:var(--body)">A practical course for municipal staff on raising revenue the city controls. Each module ends with a real document you can adapt.</p>
+   <h2>Course modules</h2>${c.mods.map((m,i)=>`<div class="item"><span class="ck ${(S.progress[c.id]||[]).includes(i)?'done':''}">${(S.progress[c.id]||[]).includes(i)?'✓':''}</span><div class="grow"><b>${i+1}. ${esc(m)}</b></div><span class="tag">${i===c.mods.length-1?'Quiz':i%2?'PDF':'Video'}</span></div>`).join('')}</div>
+  <div class="col"><div class="box"><h2>Batch details</h2><table><tr><td class="mut">Batch start date</td><td>01 Aug</td></tr><tr><td class="mut">Batch end date</td><td>30 Sep</td></tr><tr><td class="mut">Last date for enrolment</td><td>20 Aug</td></tr><tr><td class="mut">Relevant for</td><td>Revenue and finance staff</td></tr></table></div>
+  <div class="box" style="background:var(--yellow);border:0"><b>Certification criteria</b><span style="font-size:13px">Complete all modules and score at least 2 out of 3 in the final assessment.</span></div></div>
+ </div>
+</div>`};
+V.player=()=>{const c=C(S.course);const last=c.mods.length-1;const m=Math.min(S.mod,last-1);return `<nav class="nav"><span class="logo">NULP</span><button class="nl" data-go="course">‹ Back to course</button><span class="spacer"></span><span class="mut">${prog(c.id)}% complete</span></nav>
+<div class="split"><aside class="side" style="width:260px"><div class="gr">MODULES</div>${c.mods.map((t,i)=>`<button class="mod ${i===m&&S.screen==='player'?'on':''}" data-act="mod" data-i="${i}"><span class="ck ${(S.progress[c.id]||[]).includes(i)?'done':''}">${(S.progress[c.id]||[]).includes(i)?'✓':''}</span>${i+1}. ${esc(t)}</button>`).join('')}</aside>
+<div class="pg"><div class="bar"><i style="width:${prog(c.id)}%"></i></div>
+ <h1>${m+1}. ${esc(c.mods[m])}</h1>
+ <div class="player">${m%2?'<span class="mut">PDF viewer</span>':'<div class="play"></div>'}</div>
+ <p style="color:var(--body)">Watch or read this module, then mark it done. Progress is saved, so you can stop and resume later.</p>
+ <div class="row"><button class="btn o" data-act="mod" data-i="${Math.max(0,m-1)}" ${m===0?'disabled':''}>Previous</button><span class="spacer"></span><button class="btn" data-act="done" data-i="${m}">${m===last-1?'Mark done and take the assessment':'Mark done and continue'}</button></div>
+</div></div>`};
+V.assess=()=>{const c=C(S.course);const all=QUIZ.every((q,i)=>S.answers[i]!=null);return `<nav class="nav"><span class="logo">NULP</span><button class="nl" data-go="player">‹ Back to learning</button><span class="spacer"></span><span class="mut">Attempts left: ${S.attempts}</span></nav>
+<div class="pg"><div class="narrow col" style="max-width:620px;gap:16px">
+ <h1>Final assessment</h1><p class="mut">${esc(c.t)} · 3 questions · pass mark 2 of 3</p>
+ ${S.lastScore!=null&&S.lastScore<2?`<div class="box flagged fill"><b>Assessment not cleared</b><span style="font-size:13px">Your score: ${S.lastScore}/3. Attempts left: ${S.attempts}. Review your answers and click to re-attempt.</span></div>`:''}
+ ${QUIZ.map((q,i)=>`<div class="col"><b style="font-size:14px">${i+1}. ${esc(q.q)}</b>${q.o.map((o,j)=>`<button class="opt ${S.answers[i]===j?'on':''}" data-act="ans" data-q="${i}" data-a="${j}"><span class="dot"></span>${esc(o)}</button>`).join('')}</div>`).join('')}
+ <button class="btn" data-act="submitQuiz" ${all&&S.attempts>0?'':'disabled'}>${S.lastScore!=null?'Submit re-attempt':'Submit'}</button>
+ <p class="mut">Tip: try a wrong answer first to see what happens when an officer does not pass.</p>
+</div></div>`};
+V.complete=()=>{const c=C(S.course);return nav('')+`<div class="pg" style="align-items:center;text-align:center">
+ <div style="width:60px;height:60px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:26px">✓</div>
+ <h1>Course completed successfully</h1><p class="mut">Your score: ${S.lastScore}/3. Your certificate has been issued.</p>
+ <div class="cert"><span class="k">CERTIFICATE OF COMPLETION</span><span class="nm">${esc(S.user.n)}</span><span class="mut">has completed</span><b>${esc(c.t)}</b><div class="row" style="width:100%;justify-content:space-between;margin-top:10px"><span class="mut">Certificate given by ${c.by}</span><span class="mono">ID NULP-24-${c.id.toUpperCase()}-0417</span></div></div>
+ <div class="row" style="justify-content:center"><button class="btn" data-act="toast" data-m="Certificate downloaded as PDF in the real platform.">Download certificate</button><button class="btn o" data-go="certs">See all my certificates</button></div>
+</div>`};
+
+/* My learning */
+V.profile=()=>nav('')+`<div class="split">${meSide('profile')}<div class="pg">
+ <div class="row" style="gap:14px"><div style="width:64px;height:64px;border-radius:50%;background:var(--blue)"></div><div class="col" style="gap:2px"><h1>${esc(S.user.n)}</h1><span class="mut">${S.user.r} · ${S.user.c}</span></div><span class="spacer"></span><button class="btn o sm" data-act="toast" data-m="Edit profile opens a form with designation, organisation and bio.">Edit profile</button></div>
+ <div class="row"><div class="stat" style="background:var(--blue)"><b>18 h</b>Learning time</div><div class="stat" style="background:var(--green)"><b>${Object.keys(S.enrolled).length+S.history.length}</b>Courses</div><div class="stat" style="background:var(--yellow)"><b>${S.certs.length}</b>Certifications received</div><div class="stat" style="background:var(--pink)"><b>${S.events.filter(e=>e.reg).length}</b>Events</div></div>
+ <h2>About me</h2><p style="color:var(--body)">Revenue officer in the ward office. Working on property tax coverage and collection.</p>
+ <h2>Preferences<button class="lk" data-go="prefs">Change</button></h2><div class="row">${S.prefs.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
+</div></div>`;
+V.continue=()=>{const ids=Object.keys(S.enrolled);return nav('')+`<div class="split">${meSide('continue')}<div class="pg"><h1>Continue learning</h1>
+ ${ids.length?ids.map(id=>`<button class="item" data-act="open" data-id="${id}"><div class="th"></div><div class="grow"><b>${esc(C(id).t)}</b><div class="bar"><i style="width:${prog(id)}%"></i></div><span class="tag">${prog(id)}% · Batch ends 30 Sep</span></div></button>`).join(''):`<div class="box" style="border-style:dashed;align-items:flex-start"><b>No courses in progress</b><span class="mut">Join a course and it will appear here.</span><button class="btn sm" data-act="open" data-id="osr">Open “Own-source revenue for ULBs”</button></div>`}
+</div></div>`};
+V.history=()=>nav('')+`<div class="split">${meSide('history')}<div class="pg"><h1>Learning history</h1><div class="tblw"><table><tr><th>Course</th><th>Enrolled on</th><th>Completion</th></tr>${S.history.map(h=>`<tr><td>${esc(h.t)}</td><td>${h.d}</td><td>${h.p}%</td></tr>`).join('')}</table></div></div></div>`;
+V.certs=()=>nav('')+`<div class="split">${meSide('certs')}<div class="pg"><h1>Certifications received</h1>${S.certs.map(c=>`<div class="item"><div class="th" style="background:var(--yellow);width:46px;height:34px"></div><div class="grow"><b>${esc(c.t)}</b><span class="tag">Certificate given by ${c.by} · Issued ${c.d}</span></div><button class="btn o sm" data-act="toast" data-m="Certificate downloaded as PDF in the real platform.">Download</button></div>`).join('')}</div></div>`;
+
+/* Community */
+V.connections=()=>{const t=curTab('conn','My connections');const q=(S.tab.connq||'').toLowerCase();
+const others=PEOPLE.filter(p=>!S.conns.includes(p.id)&&!S.blocked.includes(p.id)&&!S.requests.includes(p.id)&&(!q||(p.n+p.r+p.c).toLowerCase().includes(q)));
+let body='';
+if(t==='My connections')body=S.conns.map(id=>{const p=P(id);return `<div class="item"><div class="th" style="width:38px;height:38px;border-radius:50%"></div><div class="grow"><b>${p.n}</b><span class="tag">${p.r} · ${p.c}</span></div><button class="btn o sm" data-act="chat" data-id="${id}">Chat</button></div>`}).join('')||'<p class="mut">No connections yet.</p>';
+if(t==='Connection requests')body=S.requests.map(id=>{const p=P(id);return `<div class="box" style="background:var(--pink);border:0"><div class="row"><b>${p.n}</b><span class="mut" style="color:var(--body)">${p.r} · ${p.c}</span></div><span style="font-size:13px">“Hello! I’d like to connect with you.”</span><div class="row"><button class="btn sm" data-act="accept" data-id="${id}">Accept</button><button class="btn o sm" data-act="decline" data-id="${id}">Decline</button><button class="btn o sm" data-act="block" data-id="${id}">Block</button></div></div>`}).join('')||'<p class="mut">No chat request.</p>';
+if(t==='Add new connection')body=`<form class="row" data-form="connq" style="flex-wrap:nowrap"><input class="in" id="connq" placeholder="Search for a user" value="${esc(S.tab.connq||'')}"><button class="btn o" type="submit">Search</button></form>`+others.map(p=>`<div class="item"><div class="th" style="width:38px;height:38px;border-radius:50%"></div><div class="grow"><b>${p.n}</b><span class="tag">${p.r} · ${p.c}</span></div>${S.sent.includes(p.id)?'<span class="pill">Request sent</span>':`<button class="btn sm" data-act="invite" data-id="${p.id}">Invite</button>`}</div>`).join('');
+if(t==='Blocked users')body=S.blocked.map(id=>{const p=P(id);return `<div class="item"><div class="grow"><b>${p.n}</b><span class="tag">${p.r}</span></div><button class="btn o sm" data-act="unblock" data-id="${id}">Unblock</button></div>`}).join('')||'<p class="mut">No blocked users.</p>';
+return nav('connections')+`<div class="pg"><div class="row"><h1 style="flex:1">Connections</h1><button class="btn sm" data-act="tab" data-k="conn" data-v="Add new connection">+ Add new</button></div>${tabs('conn',['My connections','Connection requests','Add new connection','Blocked users'])}<div class="col">${body}</div>
+<p class="mut">Messages are never anonymous. A chat opens only after the other official accepts your request.</p></div>`};
+V.chat=()=>{const p=P(S.chatWith);const m=S.chats[p.id]||[];return nav('connections')+`<div class="pg" style="max-width:760px;width:100%;margin:0 auto">
+ <div class="row" style="border-bottom:1px solid var(--line);padding-bottom:12px"><button class="lk" data-go="connections">‹</button><div class="th" style="width:36px;height:36px;border-radius:50%;background:var(--soft)"></div><div class="col" style="gap:0;flex:1"><b>${p.n}</b><span class="tag">${p.r} · ${p.c}</span></div><button class="btn o sm" data-act="block" data-id="${p.id}">Block user</button></div>
+ <p class="mut" style="text-align:center">Invitation accepted · Your chat will disappear after 1 year.</p>
+ <div class="msgs">${m.length?m.map(([w,t])=>`<div class="msg ${w}">${esc(t)}</div>`).join(''):'<p class="mut" style="text-align:center">Start a conversation!</p>'}</div>
+ <form class="row" data-form="chat" style="flex-wrap:nowrap"><input class="in" id="chatin" placeholder="Type a message" autocomplete="off"><button class="btn" type="submit">Send</button></form>
+</div>`};
+V.forum=()=>{const t=curTab('forum','Recent');let list=S.threads.slice();if(t==='Popular')list.sort((a,b)=>b.up-a.up);if(t==='My posts')list=list.filter(x=>x.by.startsWith('You'));
+return nav('forum')+`<div class="pg"><div class="row"><h1 style="flex:1">Discussions</h1><button class="btn sm" data-act="modal" data-v="newThread">+ Start a discussion</button></div>${tabs('forum',['Recent','Popular','My posts'])}
+ <div class="col">${list.map(x=>`<button class="item" data-act="thread" data-id="${x.id}"><div class="grow"><b>${esc(x.t)}</b><span class="tag">${esc(x.by)} · ${x.rep.length} replies · ${x.up} upvotes · ${x.d}</span></div><span class="pill" style="background:${x.res?'var(--green)':'var(--soft)'}">${x.res?'Resolved':'Open'}</span></button>`).join('')||'<p class="mut">You have not posted yet.</p>'}</div></div>`};
+V.thread=()=>{const x=S.threads.find(t=>t.id===S.thread);return nav('forum')+`<div class="pg" style="max-width:820px;width:100%;margin:0 auto">
+ <button class="lk" data-go="forum" style="align-self:flex-start">‹ All discussions</button>
+ <div class="row"><span class="pill">${x.d}</span><span class="pill" style="background:${x.res?'var(--green)':'var(--soft)'}">${x.res?'Resolved':'Open'}</span></div>
+ <h1>${esc(x.t)}</h1><p class="mut">Asked by ${esc(x.by)}</p>
+ <div class="row"><button class="btn o sm" data-act="upvote">▲ Upvote · ${x.up}</button>${x.res?'':'<button class="btn o sm" data-act="resolve">Mark as resolved</button>'}<button class="btn o sm" data-act="toast" data-m="Reported to the moderators.">Report</button></div>
+ <h2>${x.rep.length} replies</h2>
+ ${x.rep.map(([w,t])=>`<div class="box"><b style="font-size:12px">${esc(w)}</b><span style="font-size:13px;color:var(--body)">${esc(t)}</span></div>`).join('')}
+ <form class="col" data-form="reply"><textarea class="in" id="replyin" placeholder="Write a reply"></textarea><button class="btn" type="submit" style="align-self:flex-start">Post reply</button></form>
+</div>`};
+
+/* Events */
+V.events=()=>{const t=curTab('ev','All events');const list=S.events.filter(e=>t==='All events'||e.reg);return nav('events')+`<div class="pg"><h1>Events</h1>${tabs('ev',['All events','My events'])}
+ <div class="col">${list.map(e=>`<button class="item" data-act="event" data-id="${e.id}"><div style="width:48px;height:48px;border-radius:8px;background:${e.past?'var(--soft)':'var(--yellow)'};display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;font-size:10px"><b style="font-size:16px">${e.day}</b>${e.mon}</div><div class="grow"><b>${esc(e.t)}</b><span class="tag">Online · ${e.time} · ${e.d}${e.past?' · Ended, recording available':''}</span></div>${e.reg?'<span class="pill" style="background:var(--green)">Registered</span>':''}<span class="lk">View details</span></button>`).join('')||'<p class="mut">You have not registered for any event yet.</p>'}</div></div>`};
+V.event=()=>{const e=S.events.find(x=>x.id===S.event);return nav('events')+`<div class="pg" style="max-width:820px;width:100%;margin:0 auto">
+ <button class="lk" data-go="events" style="align-self:flex-start">‹ All events</button>
+ <div style="height:120px;border-radius:12px;background:${e.past?'var(--soft)':'var(--yellow)'}"></div>
+ <h1>${esc(e.t)}</h1><p class="mut">${e.day} ${e.mon} · ${e.time} · Online · ${e.d}</p>
+ <div class="row">${e.past?`<button class="btn" data-act="toast" data-m="The recording opens in the player.">View event recording</button>${e.reg?'<button class="btn o" data-act="toast" data-m="Event certificate downloaded.">Download certificate</button>':''}`:e.reg?`<button class="btn" data-act="attend">Attend event</button><button class="btn o" data-act="unreg">Un-register from event</button>`:`<button class="btn" data-act="reg">Register for event</button>`}</div>
+ <h2>About the event</h2><p style="color:var(--body)">A practical session with officers who have done it before, followed by open questions from cities.</p>
+ <h2>Speaker details</h2><div class="item"><div class="th" style="width:40px;height:40px;border-radius:50%"></div><div class="grow"><b>Speaker name</b><span class="tag">Designation, organisation</span></div></div>
+</div>`};
+V.eventsdash=()=>nav('events')+`<div class="pg"><h1>Events dashboard</h1>
+ <div class="row"><div class="stat" style="background:var(--yellow)"><b>212</b>Total events</div><div class="stat" style="background:var(--blue)"><b>9</b>Events this month</div><div class="stat" style="background:var(--green)"><b>14,200</b>Total participants</div><div class="stat" style="background:var(--lilac)"><b>58</b>Total creators</div><div class="stat" style="background:var(--pink)"><b>6,100</b>Total certified users</div></div>
+ <h2>Participants by month</h2><div class="bars">${[40,55,48,80,65,95].map(h=>`<i style="height:${h}%"></i>`).join('')}</div><div class="row mut" style="justify-content:space-between">${['Mar','Apr','May','Jun','Jul','Aug'].map(m=>`<span>${m}</span>`).join('')}</div>
+ <p class="mut">Example numbers.</p></div>`;
+
+/* Polls */
+V.polls=()=>{const t=curTab('pl','Live polls');const st={'Live polls':'Live','Closed polls':'Closed','Draft polls':'Draft'}[t];const list=S.polls.filter(p=>p.st===st);
+return nav('polls')+`<div class="pg"><div class="row"><h1 style="flex:1">Polls</h1><button class="btn sm" data-go="pollnew">+ Create poll</button></div>${tabs('pl',['Live polls','Closed polls','Draft polls'])}
+ <div class="col">${list.map(p=>`<div class="item"><div class="grow"><b>${esc(p.t)}</b><span class="tag">${p.st==='Live'?'Live until '+p.until:p.st==='Closed'?'Ended on '+p.until:'Draft'} · ${p.v.reduce((a,b)=>a+b,0)} votes</span></div>${p.st==='Draft'?`<button class="btn o sm" data-act="publishPoll" data-id="${p.id}">Publish</button>`:''}<button class="btn sm ${p.st==='Live'&&p.mine==null?'':'o'}" data-act="poll" data-id="${p.id}">${p.st==='Live'&&p.mine==null?'Vote now':'View results'}</button></div>`).join('')||'<p class="mut">No polls available.</p>'}</div></div>`};
+V.poll=()=>{const p=S.polls.find(x=>x.id===S.poll);const tot=p.v.reduce((a,b)=>a+b,0)||1;const showRes=p.mine!=null||p.st!=='Live';
+return nav('polls')+`<div class="pg" style="max-width:720px;width:100%;margin:0 auto"><button class="lk" data-go="polls" style="align-self:flex-start">‹ All polls</button>
+ <h1>${esc(p.t)}</h1><p class="mut">Created by a state department · ${p.st==='Live'?'Live until '+p.until:'Ended on '+p.until} · ${tot} votes</p>
+ ${showRes?p.o.map((o,i)=>`<div class="res"><span>${esc(o)}${p.mine===i?' · your vote':''} · ${Math.round(p.v[i]/tot*100)}%</span><div class="bar"><i style="width:${p.v[i]/tot*100}%"></i></div></div>`).join('')+(p.st==='Live'?`<div class="row"><button class="btn o" data-act="updateVote">Update vote</button><button class="btn o" data-act="toast" data-m="Result link copied.">Share results</button><button class="btn o" data-act="polldash" data-id="${p.id}">Poll dashboard</button></div>`:`<button class="btn o" data-act="polldash" data-id="${p.id}" style="align-self:flex-start">Poll dashboard</button>`):
+ p.o.map((o,i)=>`<button class="opt ${S.pick===i?'on':''}" data-act="pick" data-i="${i}"><span class="dot"></span>${esc(o)}</button>`).join('')+`<button class="btn" data-act="vote" ${S.pick==null?'disabled':''} style="align-self:flex-start">Submit vote</button>`}
+</div>`};
+V.pollnew=()=>nav('polls')+`<div class="pg"><form class="narrow col" data-form="poll" style="max-width:620px">
+ <h1>Create poll</h1>
+ <label class="f">Question<input class="in" id="pq" required value="Should cities publish budgets in local languages?"></label>
+ <label class="f">About survey<textarea class="in" id="pd">Helps the ministry plan translation support.</textarea></label>
+ <label class="f">Option 1<input class="in" id="po1" value="Yes, all of them"></label>
+ <label class="f">Option 2<input class="in" id="po2" value="Only the summary"></label>
+ <label class="f">Option 3<input class="in" id="po3" value="No"></label>
+ <div class="row"><label class="f">Start date<input class="in" id="ps" type="date" value="2024-08-01"></label><label class="f">End date<input class="in" id="pe" type="date" value="2024-08-31"></label></div>
+ <label class="f">Visibility<select class="in" id="pv"><option>Public</option><option>Private: invited users only</option></select></label>
+ <div class="row"><button class="btn o" type="button" data-act="draftPoll">Save as draft</button><button class="btn" type="submit">Publish poll</button></div>
+</form></div>`;
+V.polldash=()=>{const p=S.polls.find(x=>x.id===S.poll);const tot=p.v.reduce((a,b)=>a+b,0)||1;return nav('polls')+`<div class="pg"><button class="lk" data-act="poll" data-id="${p.id}" style="align-self:flex-start">‹ Back to poll</button><h1>Poll dashboard</h1><p class="mut">${esc(p.t)}</p>
+ <div class="row"><div class="stat" style="background:var(--lilac)"><b>${tot}</b>Total votes</div><div class="stat" style="background:var(--blue)"><b>${p.st}</b>Poll status</div><div class="stat" style="background:var(--green)"><b>${p.until}</b>${p.st==='Live'?'Ends on':'Ended on'}</div></div>
+ <h2>Results</h2>${p.o.map((o,i)=>`<div class="res"><span>${esc(o)} · ${p.v[i]} votes</span><div class="bar"><i style="width:${p.v[i]/tot*100}%"></i></div></div>`).join('')}
+ <h2>Votes by state</h2><div class="tblw"><table><tr><th>State</th><th>Votes</th></tr><tr><td>State A</td><td>${Math.round(tot*.3)}</td></tr><tr><td>State B</td><td>${Math.round(tot*.22)}</td></tr><tr><td>Other states</td><td>${tot-Math.round(tot*.3)-Math.round(tot*.22)}</td></tr></table></div><p class="mut">Example numbers.</p></div>`};
+
+/* Learnathon */
+V.learn=()=>nav('learn')+`<div class="split">${lnSide('learn')}<div class="pg">
+ <div class="hero" style="background:var(--green)"><span class="mono" style="color:var(--body)">LEARNATHON</span><h1 style="font-size:28px">Call for entries!</h1><p style="color:var(--body);max-width:56ch">Cities, states, academia and industry turn their best urban practice into learning content for every urban local body.</p><div class="row"><button class="btn" data-go="learnform">Participate now</button><button class="btn o" data-act="toast" data-m="Guidelines PDF opens in the real platform.">View and download guidelines</button></div></div>
+ <h2>How it works</h2>
+ <div class="g3"><div class="box"><b>1. Submit</b><span class="mut">Upload a video, PDF or course against a theme.</span></div><div class="box"><b>2. Review and vote</b><span class="mut">Experts review it, then platform users vote.</span></div><div class="box"><b>3. Publish</b><span class="mut">Winning entries become NULP content.</span></div></div>
+</div></div>`;
+V.learnform=()=>nav('learn')+`<div class="split">${lnSide('learnform')}<div class="pg"><form class="col" data-form="learn" style="max-width:640px">
+ <h1>Upload Learnathon submission</h1>
+ <h2>Participation details</h2>
+ <div class="row"><label class="f">Category of participation<select class="in" id="lc"><option>States / ULBs</option><option>Academia</option><option>Industry</option></select></label><label class="f">Name of organisation<input class="in" id="lo" value="City of Example"></label></div>
+ <label class="f">Name of department / group<input class="in" id="lg" value="Solid waste management cell"></label>
+ <h2>Submission details</h2>
+ <label class="f">Title of submission<input class="in" id="lt" required value="Door-to-door segregation in 90 days"></label>
+ <div class="row"><label class="f">Indicative theme<select class="in" id="lth"><option>Solid waste</option><option>Water</option><option>Finance</option><option>Climate</option></select></label><label class="f">Indicative subtheme<select class="in" id="lst"><option>Segregation at source</option><option>Processing</option></select></label></div>
+ <label class="f">Description<textarea class="in" id="ld">How we reached 80% segregation in three wards with ward volunteers.</textarea></label>
+ <div class="box" style="border-style:dashed;align-items:center;text-align:center"><b>Upload submission</b><span class="mut">Video, PDF or SCORM file · icon in png or jpeg, max 1MB</span><button type="button" class="btn o sm" data-act="toast" data-m="File picker opens in the real platform.">Choose file</button></div>
+ <label class="row" style="font-size:13px"><input type="checkbox" id="ltc" checked> I accept the terms and conditions</label>
+ <div class="row"><button class="btn o" type="button" data-act="learnDraft">Save as draft</button><button class="btn" type="submit">Proceed to submit</button></div>
+</form></div></div>`;
+const stCol={'Draft':'var(--soft)','Under review':'var(--yellow)','Changes asked':'var(--pink)','Live for voting':'var(--green)'};
+V.mysubs=()=>nav('learn')+`<div class="split">${lnSide('mysubs')}<div class="pg"><div class="row"><h1 style="flex:1">My submissions</h1><button class="btn sm" data-go="learnform">+ Upload submission</button></div>
+ <div class="tblw"><table><tr><th>Submission name</th><th>Theme</th><th>Last updated</th><th>Status</th></tr>${S.subsL.map(s=>`<tr><td>${esc(s.t)}</td><td>${s.th}</td><td>${s.d}</td><td><span class="pill" style="background:${stCol[s.st]}">${s.st}</span></td></tr>`).join('')}</table></div>
+ <p class="mut">Status moves from Draft to Under review, then to Changes asked or Live for voting.</p></div></div>`;
+V.reviewlist=()=>nav('learn')+`<div class="split">${lnSide('reviewlist')}<div class="pg"><h1>Submissions to review</h1>
+ <div class="tblw"><table><tr><th>Submission</th><th>Participant</th><th>Category</th><th>Theme</th><th></th></tr>${S.review.map(r=>`<tr><td>${esc(r.t)}</td><td>${r.who}</td><td>${r.cat}</td><td>${r.th}</td><td>${r.st==='Pending'?`<button class="btn sm" data-act="rev" data-id="${r.id}">Review now</button>`:`<span class="pill" style="background:${r.st==='Approved'?'var(--green)':'var(--pink)'}">${r.st}</span>`}</td></tr>`).join('')}</table></div></div></div>`;
+V.review=()=>{const r=S.review.find(x=>x.id===S.rev);return nav('learn')+`<div class="split">${lnSide('reviewlist')}<div class="pg"><button class="lk" data-go="reviewlist" style="align-self:flex-start">‹ Back to list</button>
+ <h1>${esc(r.t)}</h1><p class="mut">${r.who} · ${r.cat} · ${r.th}</p>
+ <div class="player"><div class="play"></div></div>
+ <label class="f">Comments for the participant<textarea class="in" id="revc" placeholder="What should change, if anything?"></textarea></label>
+ <div class="row"><button class="btn o" data-act="revDo" data-v="Changes asked">Request changes</button><button class="btn" data-act="revDo" data-v="Approved">Approve for voting</button></div>
+</div></div>`};
+V.vote=()=>nav('learn')+`<div class="split">${lnSide('vote')}<div class="pg"><h1>Vote now: Learnathon submissions</h1><p class="mut">Voting deadline: 30 Sep · one vote per submission</p>
+ <div class="tblw"><table><tr><th>Submission name</th><th>Vote count</th><th></th></tr>${S.voteL.map(v=>`<tr><td>${esc(v.t)}</td><td>${v.n}</td><td>${v.mine?'<span class="pill" style="background:var(--green)">Voted</span>':`<button class="btn sm" data-act="lvote" data-id="${v.id}">Vote for this content</button>`}</td></tr>`).join('')}</table></div></div></div>`;
+V.learndash=()=>{const n=640+S.subsL.filter(s=>s.st!=='Draft').length-1;return nav('learn')+`<div class="split">${lnSide('learndash')}<div class="pg"><div class="row"><h1 style="flex:1">Learnathon dashboard</h1><button class="btn o sm" data-act="toast" data-m="Table exported as CSV in the real platform.">Export table</button></div>
+ <div class="row"><div class="stat" style="background:var(--green)"><b>${n}</b>Total submissions</div><div class="stat" style="background:var(--blue)"><b>210</b>Organisations participated</div><div class="stat" style="background:var(--yellow)"><b>48</b>Published content</div></div>
+ <div class="row"><div class="stat" style="background:var(--soft)"><b>120</b>Academia</div><div class="stat" style="background:var(--soft)"><b>430</b>States / ULBs</div><div class="stat" style="background:var(--soft)"><b>90</b>Industry</div></div>
+ <div class="tblw"><table><tr><th>Submission</th><th>Theme</th><th>City</th><th>Status</th></tr>${S.review.map(r=>`<tr><td>${esc(r.t)}</td><td>${r.th}</td><td>${r.who}</td><td>${r.st}</td></tr>`).join('')}</table></div><p class="mut">Example numbers.</p></div></div>`};
+
+/* Workspace */
+V.wscreate=()=>nav('wscreate')+`<div class="split">${wsSide('wscreate')}<div class="pg"><h1>Create</h1><p class="mut">Only officials with the creator role see Workspace. Everyone else sees “Request to create”.</p>
+ <div class="grid">${[['Course','Modules, an assessment and a certificate'],['Resource','A single lesson or interactive item'],['Upload content','PDF, video, HTML or SCORM file'],['Collection','A set of related content'],['Question set','Questions for assessments'],['Good practice','A city practice, documented']].map(([t,d],i)=>`<button class="card" data-act="newContent" data-v="${t}"><div class="im" style="height:56px;background:${pale(i)}"></div><div class="tx"><b>${t}</b><span class="tag">${d}</span></div></button>`).join('')}</div></div></div>`;
+V.editor=()=>`<nav class="nav" style="background:var(--ink);color:var(--bg)"><span class="logo" style="color:var(--bg)">Course editor</span><span class="spacer"></span><button class="btn o sm" data-act="saveDraft">Save</button><button class="btn sm" style="background:var(--bg);color:var(--ink);margin-left:8px" data-act="sendReview">Send for review</button></nav>
+<div class="split"><aside class="side" style="width:230px"><div class="gr">COURSE OUTLINE</div><button class="on">Unit 1: Basics</button><button>· Video: Why it matters</button><button>· PDF: Model by-laws</button><button>Unit 2: Practice</button><button>Assessment</button><button class="lk" style="margin:8px 10px" data-act="toast" data-m="A new unit was added.">+ Add unit</button></aside>
+<div class="pg"><h2>Course details</h2>
+ <label class="f">Title<input class="in" id="edt" value="${esc(S.editTitle)}"></label>
+ <label class="f">Description<textarea class="in" id="edd">A short, practical course for ward staff.</textarea></label>
+ <div class="row"><label class="f">Domain<select class="in" id="edo"><option>Municipal finance</option><option>Water and sanitation</option></select></label><label class="f">Sub-domain<select class="in" id="eds"><option>Own-source revenue</option><option>Budgeting</option></select></label></div>
+ <div class="row"><label class="f">Relevant for<select class="in" id="edr"><option>Revenue and finance staff</option><option>All staff</option></select></label><label class="f">License terms<select class="in" id="edl"><option>CC BY 4.0</option><option>CC BY-NC 4.0</option></select></label></div>
+ <label class="f">Certificate<select class="in" id="edc"><option>NIUA template, pass mark 2 of 3</option><option>No certificate</option></select></label>
+</div></div>`;
+const wsCol={'Draft':'var(--soft)','Sent back':'var(--pink)','In review':'var(--yellow)','Published':'var(--green)'};
+const wsItem=w=>`<div class="item"><div class="th"></div><div class="grow"><b>${esc(w.t)}</b><span class="tag">${w.k} · ${w.d}</span></div><span class="pill" style="background:${wsCol[w.st]}">${w.st}</span></div>`;
+V.wsdrafts=()=>nav('wscreate')+`<div class="split">${wsSide('wsdrafts')}<div class="pg"><h1>Drafts</h1><div class="col">${S.ws.filter(w=>w.st==='Draft'||w.st==='Sent back').map(wsItem).join('')||'<p class="mut">No drafts.</p>'}</div><h2>Submitted for review</h2><div class="col">${S.ws.filter(w=>w.st==='In review').map(wsItem).join('')||'<p class="mut">Nothing waiting for review.</p>'}</div><p class="mut">A sent-back item shows the reviewer’s comments when you open it.</p></div></div>`;
+V.wsreview=()=>{const list=S.ws.filter(w=>w.st==='In review');return nav('wscreate')+`<div class="split">${wsSide('wsreview')}<div class="pg"><h1>Up for review</h1>
+ ${list.map(w=>`<div class="box"><div class="row"><b style="flex:1">${esc(w.t)}</b><span class="tag">${w.k} · submitted ${w.d}</span></div><div class="player" style="height:110px"><span class="mut">Preview</span></div><span class="mut">Checklist: content accurate, details complete, licence clear, appropriate for officials.</span><div class="row"><button class="btn o sm" data-act="wsBack" data-id="${w.id}">Request changes</button><button class="btn sm" data-act="wsPub" data-id="${w.id}">Publish</button></div></div>`).join('')||'<div class="box" style="border-style:dashed"><b>The review queue is empty</b><span class="mut">Create content and send it for review to see it here.</span></div>'}
+</div></div>`};
+V.wspub=()=>nav('wscreate')+`<div class="split">${wsSide('wspub')}<div class="pg"><h1>Published</h1><div class="col">${S.ws.filter(w=>w.st==='Published').map(w=>`<div class="item"><div class="th"></div><div class="grow"><b>${esc(w.t)}</b><span class="tag">${w.k} · live</span></div>${w.k==='Course'?`<button class="btn o sm" data-go="batches">Create batch</button>`:''}</div>`).join('')}</div>
+ <div class="box flagged fill"><b>Flagged content</b><span style="font-size:13px">Learners can flag live content. It goes to a flag reviewer, who decides whether it stays up.</span></div></div></div>`;
+V.batches=()=>nav('wscreate')+`<div class="split">${wsSide('batches')}<div class="pg"><h1>Course batches</h1>
+ <div class="tblw"><table><tr><th>Course</th><th>Batch</th><th>Start</th><th>End</th><th>Type</th></tr>${S.batches.map(b=>`<tr><td>${esc(b.c)}</td><td>${esc(b.n)}</td><td>${b.s}</td><td>${b.e}</td><td>${b.t}</td></tr>`).join('')}</table></div>
+ <form class="box" data-form="batch" style="max-width:620px"><h2>Create batch</h2>
+  <label class="f">Course<select class="in" id="bc">${S.ws.filter(w=>w.st==='Published'&&w.k==='Course').map(w=>`<option>${esc(w.t)}</option>`).join('')}</select></label>
+  <label class="f">Batch name<input class="in" id="bn" value="September cohort, State B"></label>
+  <div class="row"><label class="f">Start date<input class="in" id="bs" value="01 Sep"></label><label class="f">End date<input class="in" id="be" value="31 Oct"></label></div>
+  <label class="f">Type<select class="in" id="bt"><option>Open to all</option><option>Invite only</option></select></label>
+  <button class="btn" type="submit" style="align-self:flex-start">Create batch</button></form>
+</div></div>`;
+
+/* Admin and help */
+V.admin=()=>nav('')+`<div class="pg"><div class="row"><h1 style="flex:1">Admin dashboard</h1><select class="in" id="adst" style="width:auto"><option>All states</option><option>State A</option></select></div>
+ <div class="row"><div class="stat" style="background:var(--blue)"><b>180,000+</b>Registered users</div><div class="stat" style="background:var(--green)"><b>18,000+</b>Monthly active users</div><div class="stat" style="background:var(--yellow)"><b>2,600+</b>Cities</div></div>
+ <div class="row"><div class="stat" style="background:var(--lilac)"><b>27 of 28</b>States</div><div class="stat" style="background:var(--pink)"><b>127</b>Courses online</div><div class="stat" style="background:var(--soft)"><b>43</b>Content partners</div></div>
+ <h2>Registrations over time<span class="mut" style="font-weight:400">shape only</span></h2><div class="bars">${[4,8,15,26,40,58,74,88,100].map(h=>`<i style="height:${h}%"></i>`).join('')}</div>
+ <h2>Admin tools</h2><div class="row"><button class="btn o sm" data-act="toast" data-m="User management lists every user with role controls.">User management</button><button class="btn o sm" data-act="toast" data-m="Upload a CSV to add a whole cohort.">Bulk user upload</button><button class="btn o sm" data-act="toast" data-m="Roles: creator, reviewer, mentor, org admin.">Assign roles</button><button class="btn sm" data-go="report">Learning report</button></div>
+ <p class="mut">Headline totals are the platform's reported figures. The chart shows shape only.</p></div>`;
+V.report=()=>nav('')+`<div class="pg"><div class="row"><h1 style="flex:1">Learning report</h1><button class="btn o sm" data-act="toast" data-m="Report downloaded as CSV in the real platform.">Download CSV</button></div>
+ <div class="row"><select class="in" id="rs" style="width:auto"><option>State A</option></select><select class="in" id="rc" style="width:auto"><option>All cities</option></select><select class="in" id="rco" style="width:auto"><option>All courses</option></select></div>
+ <div class="tblw"><table><tr><th>City</th><th>Enrolled</th><th>Completed</th><th>Certified</th></tr>${[['City A',1240,860,790],['City B',980,610,575],['City C',720,390,352],['City D',510,300,281]].map(r=>`<tr>${r.map(x=>`<td>${typeof x==='number'?x.toLocaleString('en-IN'):x}</td>`).join('')}</tr>`).join('')}</table></div>
+ <p class="mut">Example rows.</p></div>`;
+V.help=()=>nav('')+`<div class="pg" style="max-width:760px;width:100%;margin:0 auto"><h1>Help and FAQs</h1>
+ ${[['How do I get a certificate?','Finish every module and pass the final assessment. The certificate appears under Certificates in your profile.'],['Can I message any official?','You can send a request to connect. A chat opens only after they accept.'],['How do I publish my city’s content?','Ask for the creator role, build it in Workspace and send it for review.']].map(([q,a])=>`<details class="box"><summary style="cursor:pointer;font-weight:600">${q}</summary><p style="color:var(--body);font-size:13px">${a}</p></details>`).join('')}
+ <div class="box" style="background:var(--blue);border:0"><b>Need more help?</b><span style="font-size:13px">The NULP helpdesk answers by email and phone on working days.</span></div></div>`;
+
+/* Modals */
+function modal(){
+ if(!S.modal)return '';
+ if(S.modal.k==='invite'){const p=P(S.modal.id);return `<div class="modal"><form class="box" data-form="invite"><h2>Send invitation to ${p.n}</h2><textarea class="in" id="invmsg">Hello! I’d like to connect with you.</textarea><span class="mut">They see your name and designation. A chat opens only if they accept.</span><div class="row" style="justify-content:flex-end"><button type="button" class="btn o" data-act="close">Cancel</button><button class="btn" type="submit">Send invitation</button></div></form></div>`}
+ if(S.modal.k==='block'){const p=P(S.modal.id);return `<div class="modal"><form class="box" data-form="block"><h2>Block ${p.n}?</h2><label class="f">Please specify reason<select class="in" id="blr"><option>Unwanted messages</option><option>Inappropriate content</option><option>Other</option></select></label><div class="row" style="justify-content:flex-end"><button type="button" class="btn o" data-act="close">Cancel</button><button class="btn" type="submit">Block user</button></div></form></div>`}
+ if(S.modal.k==='confirmLearn')return `<div class="modal"><div class="box"><h2>Are you sure?</h2><span class="mut">Once submitted, your entry goes to review and can no longer be edited.</span><div class="box" style="background:var(--soft);border:0;font-size:13px"><span><b>Title:</b> ${esc(S.modal.t)}</span><span><b>Theme:</b> ${esc(S.modal.th)}</span></div><div class="row" style="justify-content:flex-end"><button class="btn o" data-act="close">Cancel</button><button class="btn" data-act="learnSubmit">Submit</button></div></div></div>`;
+ if(S.modal.k==='newThread')return `<div class="modal"><form class="box" data-form="thread"><h2>Start a discussion</h2><label class="f">Title<input class="in" id="ntt" required value="Has any city outsourced property tax surveys?"></label><label class="f">Category<select class="in" id="ntc">${DOMAINS.slice(0,4).map(d=>`<option>${d}</option>`).join('')}</select></label><div class="row" style="justify-content:flex-end"><button type="button" class="btn o" data-act="close">Cancel</button><button class="btn" type="submit">Post</button></div></form></div>`;
+ if(S.modal.k==='attend')return `<div class="modal"><div class="box"><h2>You are in the live session</h2><div class="player" style="height:160px"><span class="mut">Live video from the meeting tool</span></div><span class="mut">Attendance is recorded for your event certificate.</span><div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">Leave session</button></div></div></div>`;
+ return '';
+}
+
+const app=document.getElementById('app');
+function draw(scrollTop){
+ const sc=S.screen,meta=SCREENS[sc];
+ app.innerHTML=`<div class="appbody">${V[sc]()}${modal()}${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}</div>`;
+ document.getElementById('url').textContent='nulp.niua.org'+meta[1];
+ document.getElementById('jump').value=sc;
+ document.getElementById('backBtn').disabled=!S.hist.length;
+ if(scrollTop)app.scrollIntoView({block:'nearest'});
+}
+
+/* Jump list */
+const jump=document.getElementById('jump');const groups={};
+Object.entries(SCREENS).forEach(([id,[t,,g]])=>{(groups[g]=groups[g]||[]).push([id,t])});
+jump.innerHTML=Object.entries(groups).map(([g,l])=>`<optgroup label="${g}">${l.map(([id,t])=>`<option value="${id}">${t}</option>`).join('')}</optgroup>`).join('');
+jump.addEventListener('change',()=>{if(!PUBLIC.includes(jump.value))S.authed=true;go(jump.value)});
+document.getElementById('reset').addEventListener('click',()=>{S=fresh();draw(true)});
+document.getElementById('backBtn').addEventListener('click',()=>{if(S.hist.length){S.screen=S.hist.pop();S.menu=false;S.modal=null;draw(true)}});
+
+const val=id=>{const el=document.getElementById(id);return el?el.value:''};
+const A={
+ menu:()=>{S.menu=!S.menu;draw()},
+ logout:()=>{S=fresh();draw(true)},
+ toast:el=>toast(el.dataset.m),
+ close:()=>{S.modal=null;draw()},
+ pref:el=>{const v=el.dataset.v;S.prefs=S.prefs.includes(v)?S.prefs.filter(x=>x!==v):S.prefs.concat(v);draw()},
+ sub:el=>{const v=el.dataset.v;S.subs=S.subs.includes(v)?S.subs.filter(x=>x!==v):S.subs.concat(v);draw()},
+ savePrefs:()=>{if(S.screen==='domains'){S.authed=true;go('home')}else toast('Preferences saved. Home now shows these domains first.')},
+ open:el=>{const c=C(el.dataset.id);S.course=c.id;go(c.k==='Course'?'course':'doc')},
+ domain:el=>{S.domain=el.dataset.v;go('domain')},
+ ftype:el=>{S.filter.type=el.dataset.v;draw()},
+ fdom:el=>{S.filter.dom=el.dataset.v||null;draw()},
+ fclear:()=>{S.filter={type:'All',dom:null};draw()},
+ join:()=>{S.enrolled[S.course]=true;S.progress[S.course]=S.progress[S.course]||[];toast('Enrolled successfully');},
+ leave:()=>{delete S.enrolled[S.course];S.progress[S.course]=[];toast('Unenrolled successfully')},
+ mod:el=>{S.mod=+el.dataset.i;const c=C(S.course);if(S.mod===c.mods.length-1){go('assess')}else draw()},
+ done:el=>{const i=+el.dataset.i,c=C(S.course);const p=S.progress[c.id]=S.progress[c.id]||[];if(!p.includes(i))p.push(i);if(i>=c.mods.length-2){S.answers={};S.lastScore=null;S.attempts=3;go('assess')}else{S.mod=i+1;draw()}},
+ ans:el=>{S.answers[+el.dataset.q]=+el.dataset.a;draw()},
+ submitQuiz:()=>{const sc=QUIZ.reduce((n,q,i)=>n+(S.answers[i]===q.a?1:0),0);S.lastScore=sc;S.attempts--;const c=C(S.course);
+  if(sc>=2){const p=S.progress[c.id]=S.progress[c.id]||[];if(!p.includes(c.mods.length-1))p.push(c.mods.length-1);if(!S.certs.find(x=>x.t===c.t))S.certs.unshift({t:c.t,by:c.by,d:'Today'});S.history.unshift({t:c.t,d:'Today',p:100});go('complete')}
+  else{S.answers={};draw(true)}},
+ chat:el=>{S.chatWith=el.dataset.id;go('chat')},
+ tab:el=>{S.tab[el.dataset.k]=el.dataset.v;draw()},
+ invite:el=>{S.modal={k:'invite',id:el.dataset.id};draw()},
+ accept:el=>{const id=el.dataset.id;S.requests=S.requests.filter(x=>x!==id);S.conns.push(id);S.chats[id]=[['them','Hello! I’d like to connect with you.']];S.chatWith=id;toast('Invitation accepted. Chat is open.');go('chat')},
+ decline:el=>{S.requests=S.requests.filter(x=>x!==el.dataset.id);toast('Request declined')},
+ block:el=>{S.modal={k:'block',id:el.dataset.id};draw()},
+ unblock:el=>{S.blocked=S.blocked.filter(x=>x!==el.dataset.id);toast('User unblocked')},
+ connectCreator:()=>{S.tab.conn='Add new connection';toast('Find the creator and send a request to connect.');go('connections')},
+ flag:()=>toast('Flagged. A reviewer will check this content.'),
+ thread:el=>{S.thread=el.dataset.id;go('thread')},
+ upvote:()=>{S.threads.find(t=>t.id===S.thread).up++;draw()},
+ resolve:()=>{S.threads.find(t=>t.id===S.thread).res=true;toast('Marked as resolved')},
+ modal:el=>{S.modal={k:el.dataset.v};draw()},
+ event:el=>{S.event=el.dataset.id;go('event')},
+ reg:()=>{S.events.find(e=>e.id===S.event).reg=true;toast('Registered. It is now in My events.')},
+ unreg:()=>{S.events.find(e=>e.id===S.event).reg=false;toast('Un-registered from event')},
+ attend:()=>{S.modal={k:'attend'};draw()},
+ poll:el=>{S.poll=el.dataset.id;S.pick=null;go('poll')},
+ pick:el=>{S.pick=+el.dataset.i;draw()},
+ vote:()=>{const p=S.polls.find(x=>x.id===S.poll);p.v[S.pick]++;p.mine=S.pick;toast('Vote submitted')},
+ updateVote:()=>{const p=S.polls.find(x=>x.id===S.poll);p.v[p.mine]--;S.pick=p.mine;p.mine=null;draw()},
+ polldash:el=>{S.poll=el.dataset.id;go('polldash')},
+ publishPoll:el=>{S.polls.find(x=>x.id===el.dataset.id).st='Live';S.tab.pl='Live polls';toast('Poll published')},
+ draftPoll:()=>{S.polls.unshift(readPoll('Draft'));S.tab.pl='Draft polls';toast('Saved as draft');go('polls')},
+ learnDraft:()=>{S.subsL.unshift({id:'s'+Date.now(),t:val('lt')||'Untitled',th:val('lth'),st:'Draft',d:'Today',who:'You'});toast('Saved as draft');go('mysubs')},
+ learnSubmit:()=>{const m=S.modal;S.subsL.unshift({id:'s'+Date.now(),t:m.t,th:m.th,st:'Under review',d:'Today',who:'You'});S.review.unshift({id:'r'+Date.now(),t:m.t,who:'City of Example',cat:m.cat,th:m.th,st:'Pending'});toast('Submission received. Results will be declared shortly.');go('mysubs')},
+ rev:el=>{S.rev=el.dataset.id;go('review')},
+ revDo:el=>{const r=S.review.find(x=>x.id===S.rev);r.st=el.dataset.v;const mine=S.subsL.find(s=>s.t===r.t);if(mine)mine.st=r.st==='Approved'?'Live for voting':'Changes asked';if(r.st==='Approved'&&!S.voteL.find(v=>v.t===r.t))S.voteL.push({id:'v'+Date.now(),t:r.t,n:0,mine:false});toast(r.st==='Approved'?'Approved. It is now open for voting.':'Sent back to the participant.');go('reviewlist')},
+ lvote:el=>{const v=S.voteL.find(x=>x.id===el.dataset.id);v.n++;v.mine=true;toast('Thank you for voting')},
+ newContent:el=>{S.editTitle='New '+el.dataset.v.toLowerCase();go('editor')},
+ saveDraft:()=>{S.editTitle=val('edt');upsertWs('Draft');toast('Saved to Drafts')},
+ sendReview:()=>{S.editTitle=val('edt');upsertWs('In review');toast('Sent for review');go('wsdrafts')},
+ wsBack:el=>{S.ws.find(w=>w.id===el.dataset.id).st='Sent back';toast('Sent back to the creator with comments')},
+ wsPub:el=>{S.ws.find(w=>w.id===el.dataset.id).st='Published';toast('Published. Learners can now find it.')}
+};
+function upsertWs(st){const w=S.ws.find(x=>x.t===S.editTitle);if(w){w.st=st;w.d='just now'}else S.ws.unshift({id:'w'+Date.now(),t:S.editTitle,k:'Course',st,d:'just now'})}
+function readPoll(st){const o=[val('po1'),val('po2'),val('po3')].filter(Boolean);return {id:'q'+Date.now(),t:val('pq')||'Untitled poll',o,v:o.map(()=>0),until:'31 Aug',st,mine:null}}
+
+const F={
+ login:()=>{S.authed=true;go('home')},
+ signup:()=>{S.user.n=(val('su-fn')+' '+val('su-ln')).trim()||S.user.n;S.user.r=val('su-de');S.user.c=val('su-ci');go('otp')},
+ otp:()=>{const code=[0,1,2,3,4,5].map(i=>val('otp'+i)).join('');if(!/^\d{6}$/.test(code)){toast('Enter all six digits of the code.');return}go('domains')},
+ search:()=>{S.query=val('q');go('search')},
+ connq:()=>{S.tab.connq=val('connq');draw()},
+ invite:()=>{S.sent.push(S.modal.id);S.modal=null;toast('Invitation sent, waiting for approval')},
+ block:()=>{const id=S.modal.id;S.blocked.push(id);S.conns=S.conns.filter(x=>x!==id);S.requests=S.requests.filter(x=>x!==id);S.modal=null;toast('User blocked');if(S.screen==='chat')go('connections')},
+ chat:()=>{const t=val('chatin').trim();if(!t)return;(S.chats[S.chatWith]=S.chats[S.chatWith]||[]).push(['me',t]);draw();const i=document.getElementById('chatin');if(i)i.focus()},
+ reply:()=>{const t=val('replyin').trim();if(!t)return;S.threads.find(x=>x.id===S.thread).rep.push(['You, '+S.user.r,t]);draw()},
+ thread:()=>{const id='t'+Date.now();S.threads.unshift({id,t:val('ntt'),by:'You, '+S.user.r,d:val('ntc'),res:false,up:0,rep:[]});S.thread=id;go('thread')},
+ poll:()=>{const p=readPoll('Live');S.polls.unshift(p);S.poll=p.id;S.pick=null;toast('Poll published');go('poll')},
+ learn:()=>{S.modal={k:'confirmLearn',t:val('lt')||'Untitled',th:val('lth'),cat:val('lc')};draw()},
+ batch:()=>{S.batches.push({c:val('bc'),n:val('bn'),s:val('bs'),e:val('be'),t:val('bt')});toast('Batch created. Learners can now enrol.')}
+};
+
+app.addEventListener('click',e=>{
+ const el=e.target.closest('[data-go],[data-act]');if(!el||el.disabled)return;
+ if(S.menu&&!el.closest('.menu')&&el.dataset.act!=='menu')S.menu=false;
+ if(el.dataset.go){e.preventDefault();go(el.dataset.go);return}
+ const f=A[el.dataset.act];if(f){e.preventDefault();f(el)}
+});
+app.addEventListener('submit',e=>{e.preventDefault();const f=F[e.target.dataset.form];if(f)f()});
+app.addEventListener('input',e=>{const m=/^otp(\d)$/.exec(e.target.id);if(m&&e.target.value&&+m[1]<5){const n=document.getElementById('otp'+(+m[1]+1));if(n){n.focus();n.select()}}});
+draw();
+})();
+</script>
+
+</body>
+</html>

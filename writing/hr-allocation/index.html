@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en" data-site-base="../../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Allocating Fellows to States</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Human resource allocation for capacity building reforms: a weighted index for distributing National Urban Digital Mission fellows across Indian states. By Shashank Mishra.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An essay page in the portfolio's look: white paper, black Helvetica, light pastel fills that mark what matters.
+   A sticky rail tracks the six sections; figures from the paper are redrawn in the same ink. One light look on purpose. */
+:root {
+  color-scheme: light;
+  --ink: #111111; --body: #3d3d3b; --muted: #76766f; --line: #e4e4df; --rule: #111111; --soft: #f5f5f2; --paper: #ffffff;
+  --blue: #d9e8ff; --green: #d6f2df; --pink: #fbdde8; --yellow: #fff1b8; --lilac: #e8e1ff; --gray: #ececea;
+  --s1: #4a7fd6; --s2: #e0855a;
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+a:hover { opacity: .6; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; }
+strong, b { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar, as on the site */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 22px 16px; }
+.bar .crumb { font-size: 13px; color: var(--muted); }
+.bar .crumb a { color: var(--muted); text-decoration: none; }
+.bar .right { justify-self: end; font-size: 13px; color: var(--muted); }
+.arrow { display: block; width: 30px; height: 20px; }
+.arrow path { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+/* Hero */
+.hero { padding-block: 40px 0; display: flex; flex-direction: column; gap: 32px; }
+.hero .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hero h1 { font-size: clamp(44px, 7.4vw, 88px); line-height: .98; letter-spacing: -0.05em; margin-top: 14px; }
+.hero h1 em { font-style: normal; background: var(--yellow); padding: 0 .08em; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+.hero .lede { font-size: 19px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.hero .src { display: inline-flex; gap: 6px; margin-top: 14px; font-size: 14px; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.meta div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meta .l { font-size: 12px; color: var(--muted); }
+.meta .v { font-size: 15px; line-height: 1.4; }
+.towers { display: block; width: 100%; height: auto; margin-top: 8px; }
+@media (max-width: 860px) { .hero-top { grid-template-columns: 1fr; gap: 18px; } .meta { grid-template-columns: 1fr 1fr; } }
+
+/* Epigraph */
+.epi { max-width: 640px; margin: 56px auto 0; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.epi p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.4; }
+.epi .by { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Body layout: section rail + reading column */
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; padding-block: 72px 40px; }
+.rail nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.rail a { text-decoration: none; color: var(--muted); padding: 5px 0 5px 12px; border-left: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; line-height: 1.4; }
+.rail a.on { color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; }
+.rail a span:first-child { font-family: var(--mono); font-size: 11px; padding-top: 1px; }
+@media (max-width: 960px) { .body { grid-template-columns: 1fr; gap: 0; padding-top: 48px; } .rail { display: none; } }
+
+.content { min-width: 0; display: flex; flex-direction: column; gap: 88px; }
+.sec { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 90px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 16px; margin-bottom: 8px; }
+.sec-head .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.04; letter-spacing: -0.04em; }
+.sec > p, .prose p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.sec > p strong { color: var(--ink); }
+.sec h3 { font-size: 24px; letter-spacing: -0.03em; line-height: 1.2; margin-top: 16px; }
+.label { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: -10px; }
+sup a { font-family: var(--mono); font-size: 10px; text-decoration: none; color: var(--muted); padding: 0 1px; }
+.pull { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; }
+.pull p { font-size: 24px; font-weight: 300; line-height: 1.38; letter-spacing: -0.02em; color: var(--ink); }
+.pull .by { display: block; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+figure { margin: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font-size: 12px; color: var(--muted); max-width: 680px; }
+svg text { font-family: var(--font); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; display: block; }
+
+/* Key numbers */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.key { border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.key .v { font-size: clamp(26px, 2.8vw, 34px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.key .v small { font-size: .5em; letter-spacing: 0; margin-left: 2px; }
+.key .l { font-size: 13px; line-height: 1.35; color: var(--body); }
+@media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } }
+.bg-blue { background: var(--blue); } .bg-green { background: var(--green); } .bg-pink { background: var(--pink); } .bg-yellow { background: var(--yellow); } .bg-lilac { background: var(--lilac); } .bg-gray { background: var(--gray); } .bg-soft { background: var(--soft); }
+
+/* Subsidy chart */
+.chart { position: relative; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity .12s; }
+.tip.on { opacity: 1; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+details.tbl { font-size: 13px; color: var(--muted); }
+details.tbl summary { cursor: pointer; }
+details.tbl table { margin-top: 10px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font-weight: 400; font-size: 12px; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+td:first-child { color: var(--ink); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Fixed vs variable */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.split > div { border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.split h4 { font-size: 18px; font-weight: 600; }
+.split .tied { font-size: 13px; color: var(--body); }
+.split .tied b { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; background: var(--paper); border: 1px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+@media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+
+/* Public good test */
+.test { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.2fr); gap: 10px; align-items: stretch; }
+.test > div { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--body); }
+.test .q { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.test h4 { font-size: 17px; font-weight: 600; color: var(--ink); }
+.test .ar { border: 0; padding: 0; display: grid; place-items: center; font-size: 22px; }
+.test .out { border-color: var(--ink); background: var(--green); color: var(--ink); }
+@media (max-width: 760px) { .test { grid-template-columns: 1fr 1fr; } .test .ar { display: none; } .test .out { grid-column: 1 / -1; } }
+
+/* Ownership meters */
+.own { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.own .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 170px; gap: 14px; align-items: center; font-size: 14px; }
+.own .track { height: 12px; border-radius: 6px; background: var(--soft); position: relative; overflow: hidden; }
+.own .track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.own .v { font-size: 13px; color: var(--body); }
+@media (max-width: 560px) { .own .row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Market failures grid */
+.fails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fails a { text-decoration: none; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fails .n { font-family: var(--mono); font-size: 11px; color: var(--body); }
+.fails b { font-size: 16px; }
+.fails span:last-child { font-size: 13px; color: var(--body); line-height: 1.4; }
+@media (max-width: 760px) { .fails { grid-template-columns: 1fr 1fr; } }
+.fail > p { max-width: 680px; color: var(--body); text-wrap: pretty; }
+.fail { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 90px; }
+.fail-h { display: flex; gap: 12px; align-items: baseline; margin-top: 20px; }
+.fail-h .n { font-family: var(--mono); font-size: 12px; border-radius: 999px; padding: 2px 9px; }
+.fail-h h3 { margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts > div { border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; color: var(--body); }
+.opts .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opts h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } }
+
+/* Carbon example */
+.carbon { border: 1px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+.carbon .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.assume { display: flex; flex-wrap: wrap; gap: 8px; }
+.assume span { font-size: 13px; background: var(--soft); border-radius: 999px; padding: 4px 12px; }
+.scen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.scen > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.scen h4 { font-size: 17px; font-weight: 600; }
+.scen .how { font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.plant { display: grid; grid-template-columns: 62px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.plant .cap { height: 22px; border: 1px dashed var(--ink); border-radius: 5px; position: relative; background: rgba(255,255,255,.6); }
+.plant .cap i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--ink); }
+.plant .em { font-size: 12px; color: var(--body); }
+.res { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid rgba(0,0,0,.15); padding-top: 12px; }
+.res div { display: flex; flex-direction: column; gap: 2px; }
+.res .v { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.1; }
+.res .l { font-size: 12px; color: var(--body); }
+.scale { font-size: 12px; color: var(--muted); }
+@media (max-width: 700px) { .scen { grid-template-columns: 1fr; } }
+
+/* Content and carriage */
+.cc { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.cc > div { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--body); }
+.cc h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.cc .ar { padding: 0; display: grid; place-items: center; font-size: 22px; }
+.cc svg { width: 100%; height: auto; }
+@media (max-width: 700px) { .cc { grid-template-columns: 1fr; } .cc .ar { transform: rotate(90deg); } }
+
+/* Aatma-Nirbhar */
+.an { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.an > div { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.an .top { padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; color: var(--body); flex: 1; }
+.an .top .k { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.an .top h4 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.an .op { padding: 14px 18px; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.an .op .k { display: block; font-family: var(--mono); font-size: 11px; color: var(--body); margin-bottom: 4px; }
+.an .op.none { color: var(--muted); }
+.verdict { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 1px 7px; color: var(--ink); white-space: nowrap; }
+@media (max-width: 700px) { .an { grid-template-columns: 1fr; } }
+
+/* Surplus */
+.surplus { max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.surplus .row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-size: 14px; }
+.surplus .bar2 { height: 26px; border-radius: 0 5px 5px 0; }
+.surplus .v { text-align: right; font-variant-numeric: tabular-nums; }
+.surplus .gap { position: relative; height: 26px; }
+@media (max-width: 560px) { .surplus .row { grid-template-columns: 90px minmax(0, 1fr) 56px; } }
+
+/* Notes */
+.notes { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 90px; }
+.notes h2 { font-size: 26px; letter-spacing: -0.03em; }
+.notes ol { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.5; }
+.notes li { scroll-margin-top: 90px; overflow-wrap: anywhere; }
+.notes li:target { background: var(--yellow); }
+.notes a { color: var(--body); }
+.about-author { font-size: 14px; color: var(--body); max-width: 680px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); max-width: 680px; }
+.next { display: flex; flex-direction: column; gap: 6px; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
+.next .l { font-size: 13px; color: var(--muted); }
+.next .t { font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.04em; }
+footer { padding-block: 32px 56px; font-size: 13px; color: var(--muted); }
+
+/* ---------- HR allocation additions ---------- */
+@media (max-width: 480px) { .bar .right { display: none; } }
+.hero h1 { font-size: clamp(38px, 5.6vw, 68px); line-height: 1.06; }
+.hero h1 em { background: linear-gradient(transparent 24%, var(--yellow) 24%); }
+.k11 { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lead2 { font-size: 21px; font-weight: 300; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink) !important; max-width: 720px; }
+.abstract { border-left: 3px solid var(--ink); padding: 4px 0 4px 20px; max-width: 720px; display: flex; flex-direction: column; gap: 6px; }
+.abstract p { font-size: 16px; color: var(--body); line-height: 1.6; }
+.mapdots { display: block; width: 100%; height: auto; margin-top: 8px; }
+
+.roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.roles > div { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.roles b { color: var(--ink); font-size: 15px; }
+@media (max-width: 760px) { .roles { grid-template-columns: 1fr 1fr; } }
+
+.chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.chain > div { border: 1px solid var(--ink); border-radius: 10px; padding: 14px; margin-right: 18px; position: relative; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--body); line-height: 1.4; }
+.chain > div:last-child { margin-right: 0; }
+.chain > div:not(:last-child)::after { content: "→"; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--ink); }
+.chain b { color: var(--ink); font-size: 15px; }
+@media (max-width: 760px) { .chain { grid-template-columns: 1fr; gap: 10px; } .chain > div { margin-right: 0; } .chain > div::after { display: none; } }
+
+.types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.types > div { border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); line-height: 1.45; }
+.types .v { font-size: 34px; font-weight: 300; letter-spacing: -0.04em; color: var(--ink); line-height: 1; }
+.types b { color: var(--ink); font-size: 15px; }
+.types .w { align-self: flex-start; font-family: var(--mono); font-size: 12px; border: 1px solid var(--ink); background: var(--paper); padding: 2px 8px; color: var(--ink); }
+@media (max-width: 760px) { .types { grid-template-columns: 1fr; } }
+.notes2 { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--body); max-width: 680px; }
+.notes2 div { display: grid; grid-template-columns: 24px minmax(0, 1fr); }
+.notes2 span { font-family: var(--mono); font-size: 11px; color: var(--ink); padding-top: 2px; }
+
+.formula { border: 1.5px solid var(--ink); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px; background: var(--paper); }
+.formula .eq { font-family: var(--mono); font-size: clamp(14px, 2vw, 19px); line-height: 1.7; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+.formula .eq i { font-style: normal; padding: 1px 6px; border-radius: 4px; }
+.formula dl { margin: 0; display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px 12px; font-size: 13.5px; color: var(--body); }
+.formula dt { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.formula dd { margin: 0; }
+
+.worked { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.worked > div { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--body); }
+.worked h4 { font-size: 16px; font-weight: 600; color: var(--ink); }
+.worked .calc { font-family: var(--mono); font-size: 12.5px; color: var(--ink); line-height: 1.8; }
+.worked .calc b { background: var(--yellow); padding: 0 4px; font-weight: 500; }
+@media (max-width: 640px) { .worked { grid-template-columns: 1fr; } }
+
+/* Share chart */
+.share { display: flex; flex-direction: column; gap: 3px; }
+.share .row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 56px; gap: 12px; align-items: center; font-size: 12.5px; }
+.share .row .n { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.share .row .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.share .tr { position: relative; height: 16px; }
+.share .tr .b { position: absolute; left: 0; top: 2px; height: 12px; border-radius: 0 3px 3px 0; background: var(--ink); }
+.share .tr .u { position: absolute; top: 0; width: 2px; height: 16px; background: #e0855a; }
+.share .hd { font-size: 12px; color: var(--muted); }
+.share-lg { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--body); }
+.share-lg span { display: inline-flex; align-items: center; gap: 8px; }
+.share-lg i { display: inline-block; }
+@media (max-width: 560px) { .share .row { grid-template-columns: 110px minmax(0, 1fr) 46px; gap: 8px; } }
+.more { align-self: flex-start; font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 1px solid var(--ink); padding: 0; cursor: pointer; color: var(--ink); margin-top: 8px; }
+
+/* Allocator */
+.alloc { border: 1px solid var(--ink); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.alloc .ctl { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 14px; }
+.alloc input[type=number] { width: 84px; font: inherit; font-size: 16px; padding: 6px 8px; border: 1px solid var(--ink); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.alloc input[type=range] { flex: 1; min-width: 160px; accent-color: #111; }
+.alloc .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.alloc .cell { display: flex; justify-content: space-between; gap: 8px; align-items: center; border-radius: 8px; padding: 7px 10px; font-size: 13px; background: var(--soft); }
+.alloc .cell.zero { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.alloc .cell b { font-variant-numeric: tabular-nums; font-size: 15px; }
+.alloc .cell .ppl { display: inline-flex; gap: 2px; margin-left: auto; margin-right: 8px; }
+.alloc .cell .ppl i { width: 6px; height: 10px; border-radius: 3px 3px 1px 1px; background: var(--ink); display: block; }
+.alloc .sum { font-size: 12.5px; color: var(--muted); }
+
+.cmp2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cmp2 > div { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.cmp2 h4 { font-size: 15px; font-weight: 600; }
+.cmp2 ol { margin: 0; padding-left: 1.4em; font-size: 13.5px; color: var(--body); display: flex; flex-direction: column; gap: 2px; }
+.cmp2 .f { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.cmp2 li.diff { background: var(--yellow); }
+@media (max-width: 640px) { .cmp2 { grid-template-columns: 1fr; } }
+
+.lim { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lim > div { border: 1px dashed var(--ink); border-radius: 10px; padding: 14px; font-size: 13.5px; color: var(--body); line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
+.lim b { color: var(--ink); }
+@media (max-width: 640px) { .lim { grid-template-columns: 1fr; } }
+</style>
+<style>
+/* Dot cursor: a small dot everywhere, a ringed dot over anything clickable. */
+html, body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='%23111' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 6 6, auto; }
+a, button, summary, label, select, input[type=range], input[type=checkbox], input[type=radio], [role=button], [data-go], [data-post], [data-cv], .cv-row, .tp { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23111' stroke-width='1.4'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23111'/%3E%3C/svg%3E") 12 12, pointer !important; }
+</style>
+</head><body>
+
+<header class="bar">
+  <div class="wrap">
+    <a href="#" data-site-link="write" aria-label="Back to I write"><svg class="arrow" viewBox="0 0 30 20" aria-hidden="true"><path d="M13 1 L2 10 L13 19 M2 10 L22 10"/></svg></a>
+    <span class="crumb"><a href="#" data-site-link="write">I write</a> / Society</span>
+    <span class="right">Strategy paper</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="k">Strategy paper · Public administration</span>
+          <h1>Human Resource Allocation for Capacity Building <em>Reforms</em></h1>
+        </div>
+        <div>
+          <p class="lede">How do you divide a small team of fellows across 36 states and union territories so that each state gets help in proportion to the work it has? A simple weighted index, built on India's list of 4,743 urban local bodies.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="l">Author</span><span class="v">Shashank Mishra</span></div>
+        <div><span class="l">Context</span><span class="v">National Urban Digital Mission, Centre for Digital Governance, NIUA</span></div>
+        <div><span class="l">Data</span><span class="v">4,743 urban local bodies in 36 states and union territories</span></div>
+        <div><span class="l">Method</span><span class="v">Weighted index by type of urban local body</span></div>
+      </div>
+    </section>
+
+    <div class="epi">
+      <div class="abstract">
+        <span class="k11">Abstract</span>
+        <p>The National Urban Digital Mission set out to deploy UPYOG, a digital public infrastructure for cities built by the National Institute of Urban Affairs, across India. Rolling it out needed someone in every state to coordinate with the state government and its cities. The Mission hired a limited number of fellows for this role. This paper proposes a way to distribute them. Each state's coordination load is estimated with an index that counts its urban local bodies, weighted by type: a municipal corporation counts as 1, a municipality as 0.5 and a town panchayat as 0.1. Fellows are then allocated in proportion to each state's share of the index. A second weighting, closer to population, gives almost the same ranking of states.</p>
+      </div>
+    </div>
+
+    <div class="body">
+      <aside class="rail" aria-label="Sections">
+        <nav>
+          <a href="#background"><span>01</span><span>Background</span></a>
+          <a href="#problem"><span>02</span><span>The allocation problem</span></a>
+          <a href="#data"><span>03</span><span>Data</span></a>
+          <a href="#model"><span>04</span><span>The model</span></a>
+          <a href="#results"><span>05</span><span>Results</span></a>
+          <a href="#robust"><span>06</span><span>A second weighting</span></a>
+          <a href="#limits"><span>07</span><span>Limits</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+
+        <section class="sec" id="background">
+          <div class="sec-head"><span class="k">01</span><h2>Background</h2></div>
+          <p>Under the National Urban Digital Mission, the Centre for Digital Governance was implementing UPYOG, a digital public infrastructure for urban governance built by the National Institute of Urban Affairs. It was meant to be adopted across India. A national platform, however, is only adopted state by state. Each state decides, and each state's cities have to be brought on board.</p>
+          <div class="chain">
+            <div class="bg-blue"><span class="k11">Centre</span><b>Ministry and the Mission</b>Set the direction and build the platform.</div>
+            <div class="bg-yellow"><span class="k11">Bridge</span><b>NUDM fellow</b>One point of contact placed in the state.</div>
+            <div class="bg-green"><span class="k11">State</span><b>State government</b>Agrees, plans and leads the rollout.</div>
+            <div class="bg-soft"><span class="k11">Cities</span><b>Urban local bodies</b>Adopt the platform and use it.</div>
+          </div>
+          <p>To bridge the centre and the states, the Mission hired NUDM fellows. Each fellow would be placed in a state and drive the rollout from there.</p>
+          <div class="roles">
+            <div class="bg-soft"><b>Convene</b>Arrange meetings between the state, its cities and the Mission.</div>
+            <div class="bg-soft"><b>Deploy</b>Help with the technical deployment of the platform.</div>
+            <div class="bg-soft"><b>Unblock</b>Find and clear the bottlenecks that stall adoption.</div>
+            <div class="bg-soft"><b>Connect</b>Be the state's point of contact with the central ministry.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="problem">
+          <div class="sec-head"><span class="k">02</span><h2>The allocation problem</h2></div>
+          <p class="lead2">There were far fewer fellows than the work required, and the work was not spread evenly.</p>
+          <p>India has 36 states and union territories, but they differ enormously. Uttar Pradesh has 750 urban local bodies. Chandigarh has one. Giving every state the same number of fellows would leave the largest states stretched thin and the smallest over-served.</p>
+          <p>Counting cities alone is not the answer either. A large municipal corporation and a small town panchayat both count as one, yet the corporation has far more departments, services and people to bring on board. A fair allocation needs to reflect how much coordination each state's cities actually demand.</p>
+        </section>
+
+        <section class="sec" id="data">
+          <div class="sec-head"><span class="k">03</span><h2>Data</h2></div>
+          <p>The model starts from the national master list of urban local bodies, with each body's LGD code, type, number of wards and state. After cleaning, the list holds 4,743 urban local bodies. These were grouped into three types.</p>
+          <div class="types">
+            <div class="bg-blue"><span class="k11">Type 1</span><span class="v num">243</span><b>Municipal corporations</b>The largest cities, with the most departments and services.<span class="w">weight 1</span></div>
+            <div class="bg-green"><span class="k11">Type 2</span><span class="v num">2,011</span><b>Municipalities</b>Mid-sized towns and cities.<span class="w">weight 0.5</span></div>
+            <div class="bg-yellow"><span class="k11">Type 3</span><span class="v num">2,489</span><b>Town panchayats</b>Small towns in transition from rural to urban.<span class="w">weight 0.1</span></div>
+          </div>
+          <p>Some states use other names for their urban bodies. To keep three types, they were grouped as follows.</p>
+          <div class="notes2">
+            <div><span>1</span>Karnataka's city municipal councils and town municipal councils are counted as municipalities.</div>
+            <div><span>2</span>The NCT Municipal Council in Delhi is counted as a municipality.</div>
+            <div><span>3</span>Notified area councils are added to town panchayats, to keep the index simple.</div>
+          </div>
+        </section>
+
+        <section class="sec" id="model">
+          <div class="sec-head"><span class="k">04</span><h2>The model</h2></div>
+          <p>Each state gets a score, T, that stands for its coordination load. Each type of urban local body adds to the score according to its weight.</p>
+          <div class="formula">
+            <div class="eq">T<sub>s</sub> = <i class="bg-blue">1 × MC<sub>s</sub></i> + <i class="bg-green">0.5 × M<sub>s</sub></i> + <i class="bg-yellow">0.1 × TP<sub>s</sub></i></div>
+            <div class="eq">Fellows<sub>s</sub> = N × T<sub>s</sub> ÷ ΣT</div>
+            <dl>
+              <dt>MC, M, TP</dt><dd>The number of municipal corporations, municipalities and town panchayats in state s.</dd>
+              <dt>T</dt><dd>The state's index score. Across India, ΣT = 1,497.4.</dd>
+              <dt>N</dt><dd>The number of fellows available.</dd>
+            </dl>
+          </div>
+          <p>The weights set how much each type counts. One municipal corporation counts as much as two municipalities, or ten town panchayats. The index therefore rewards states with many large cities, where a rollout has the most to coordinate, without ignoring states with many small towns.</p>
+          <div class="worked">
+            <div>
+              <h4>Uttar Pradesh</h4>
+              <div class="calc">1 × 20 + 0.5 × 199 + 0.1 × 531<br>= 20 + 99.5 + 53.1<br>= <b>172.6</b>, or 11.5% of India</div>
+              Most urban bodies in the country, but most are small, so its share falls from 15.8% of all bodies to 11.5%.
+            </div>
+            <div>
+              <h4>Maharashtra</h4>
+              <div class="calc">1 × 27 + 0.5 × 241 + 0.1 × 131<br>= 27 + 120.5 + 13.1<br>= <b>160.6</b>, or 10.7% of India</div>
+              The most municipal corporations of any state, so its share rises from 8.4% of all bodies to 10.7%.
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="results">
+          <div class="sec-head"><span class="k">05</span><h2>Results</h2></div>
+          <p>The chart shows each state's share of the index, which is its share of the fellows. The orange mark shows what its share would be if every urban body counted the same.</p>
+          <figure>
+            <div class="share-lg"><span><i style="width:18px;height:10px;background:#111;border-radius:0 3px 3px 0"></i>Share of the index</span><span><i style="width:2px;height:14px;background:#e0855a"></i>Share of urban bodies, unweighted</span></div>
+            <div class="share" id="share"></div>
+            <button class="more" id="more" type="button">Show all 36</button>
+            <figcaption>Share of India's total, by state and union territory. Computed from the model's spreadsheet.</figcaption>
+          </figure>
+          <p>The weighting changes the picture in a clear way. States with many small town panchayats, such as Uttar Pradesh, Tamil Nadu and Rajasthan, get a smaller share than a plain count would give them. States whose urban bodies are mostly municipalities and corporations, such as Gujarat, Telangana, West Bengal and Kerala, get a larger one.</p>
+
+          <h3>Try it</h3>
+          <p>Enter the number of fellows to see how the index would divide them.</p>
+          <div class="alloc">
+            <div class="ctl"><label for="nf">Fellows</label><input id="nf" type="number" min="1" max="200" value="30"><input id="nr" type="range" min="1" max="100" value="30" aria-label="Number of fellows"></div>
+            <div class="grid" id="grid"></div>
+            <span class="sum" id="sum"></span>
+          </div>
+          <p class="disclaimer">Whole fellows are assigned by the largest-remainder method: each state first gets the whole part of its share, and the fellows left over go to the states with the largest fractions. This rounding step was added for this page.</p>
+        </section>
+
+        <section class="sec" id="robust">
+          <div class="sec-head"><span class="k">06</span><h2>A second weighting</h2></div>
+          <p>The weights are a judgment, so the model was also run with a second set that leans much harder on large cities: 5 for a municipal corporation, 0.4 for a municipality and 0.12 for a town panchayat. This version is closer to how population is spread across the three types.</p>
+          <div class="cmp2">
+            <div><h4>Main index</h4><span class="f">1 · MC + 0.5 · M + 0.1 · TP</span><ol id="r1"></ol></div>
+            <div><h4>Population-leaning index</h4><span class="f">5 · MC + 0.4 · M + 0.12 · TP</span><ol id="r2"></ol></div>
+          </div>
+          <p>Nine of the top ten states are the same under both. The order shifts a little, and Andhra Pradesh, with many corporations, enters the top ten in place of West Bengal. The allocation is not sensitive to the exact weights, which makes it easier to defend.</p>
+        </section>
+
+        <section class="sec" id="limits">
+          <div class="sec-head"><span class="k">07</span><h2>Limits</h2></div>
+          <p>The index is deliberately simple, so it can be explained in a meeting and checked by anyone with the list of urban bodies. That simplicity has costs.</p>
+          <div class="lim">
+            <div><b>The weights are set by judgment</b>They reflect relative workload, not a measured one. The second weighting shows the result holds, but the numbers could be refined.</div>
+            <div><b>Type is a proxy</b>Two municipalities can differ a lot in size and capacity. Ward counts or population would sharpen the index.</div>
+            <div><b>Readiness is not counted</b>A state that has already started adoption may need less help than its size suggests.</div>
+            <div><b>Small states round to zero</b>Many smaller states and union territories get less than one fellow. One fellow could cover a group of neighboring states.</div>
+          </div>
+          <a class="next" href="#" data-site-link="write"><span class="l">Back to</span><span class="t">I write →</span></a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Shashank Mishra</div></footer>
+
+<script>
+  (function () {
+    var base = document.documentElement.getAttribute('data-site-base');
+    // Opened from a resume (?from=resume-product): the back arrow returns to that resume.
+    var FROM = (location.search.match(/[?&]from=(resume-(?:product|policy))\b/) || [])[1];
+    document.querySelectorAll('[data-site-link]').forEach(function (a) {
+      if (base) a.setAttribute('href', base + '#' + (FROM && /^Back to I /.test(a.getAttribute('aria-label') || '') ? FROM : a.getAttribute('data-site-link')));
+      else a.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+
+    var ROWS = [["Uttar Pradesh", 20, 199, 531], ["Maharashtra", 27, 241, 131], ["Tamil Nadu", 16, 120, 528], ["Karnataka", 11, 180, 123], ["Madhya Pradesh", 16, 99, 294], ["Gujarat", 8, 156, 1], ["Telangana", 13, 129, 0], ["Punjab", 14, 97, 52], ["Bihar", 14, 73, 162], ["West Bengal", 7, 116, 3], ["Andhra Pradesh", 16, 73, 31], ["Kerala", 6, 87, 0], ["Chhattisgarh", 14, 43, 112], ["Rajasthan", 10, 34, 169], ["Haryana", 11, 60, 22], ["Odisha", 5, 47, 62], ["Uttarakhand", 8, 42, 43], ["Jammu and Kashmir", 2, 57, 19], ["Assam", 1, 37, 64], ["Himachal Pradesh", 5, 29, 27], ["Jharkhand", 9, 20, 21], ["Manipur", 1, 21, 5], ["Tripura", 1, 13, 6], ["Goa", 1, 13, 0], ["Nagaland", 0, 3, 36], ["Delhi", 3, 1, 0], ["Meghalaya", 0, 6, 5], ["Arunachal Pradesh", 1, 1, 17], ["Mizoram", 1, 0, 22], ["Sikkim", 1, 3, 3], ["Puducherry", 0, 5, 0], ["Dadra and Nagar Haveli and Daman and Diu", 0, 3, 0], ["Chandigarh", 1, 0, 0], ["Ladakh", 0, 2, 0], ["Andaman and Nicobar Islands", 0, 1, 0], ["Lakshadweep", 0, 0, 0]];
+    var data = ROWS.map(function (r) {
+      return { s: r[0], mc: r[1], m: r[2], tp: r[3], t: r[1] + 0.5 * r[2] + 0.1 * r[3], p: 5 * r[1] + 0.4 * r[2] + 0.12 * r[3], u: r[1] + r[2] + r[3] };
+    });
+    var T = 0, P = 0, U = 0;
+    data.forEach(function (d) { T += d.t; P += d.p; U += d.u; });
+    var maxShare = 0;
+    data.forEach(function (d) { d.st = d.t / T; d.su = d.u / U; maxShare = Math.max(maxShare, d.st, d.su); });
+
+    var share = document.getElementById('share');
+    var showAll = false;
+    function drawShare() {
+      var list = data.slice().sort(function (a, b) { return b.st - a.st; });
+      if (!showAll) list = list.slice(0, 15);
+      share.innerHTML = list.map(function (d) {
+        var w = (d.st / maxShare * 100).toFixed(2), u = (d.su / maxShare * 100).toFixed(2);
+        return '<div class="row"><span class="n" title="' + d.s + '">' + d.s + '</span><span class="tr"><span class="b" style="width:' + w + '%"></span><span class="u" style="left:' + u + '%"></span></span><span class="v">' + (d.st * 100).toFixed(1) + '%</span></div>';
+      }).join('');
+    }
+    drawShare();
+    var more = document.getElementById('more');
+    more.addEventListener('click', function () { showAll = !showAll; more.textContent = showAll ? 'Show top 15' : 'Show all 36'; drawShare(); });
+
+    function allocate(n) {
+      var rows = data.map(function (d) { var q = n * d.t / T; return { s: d.s, f: Math.floor(q), r: q - Math.floor(q) }; });
+      var left = n - rows.reduce(function (a, r) { return a + r.f; }, 0);
+      rows.slice().sort(function (a, b) { return b.r - a.r; }).slice(0, left).forEach(function (r) { r.f += 1; });
+      return rows;
+    }
+    var nf = document.getElementById('nf'), nr = document.getElementById('nr'), grid = document.getElementById('grid'), sum = document.getElementById('sum');
+    function drawAlloc(n) {
+      n = Math.max(1, Math.min(200, Math.round(n || 1)));
+      var rows = allocate(n).sort(function (a, b) { return b.f - a.f || b.r - a.r; });
+      var got = rows.filter(function (r) { return r.f > 0; }).length;
+      grid.innerHTML = rows.map(function (r) {
+        var ppl = '';
+        for (var i = 0; i < Math.min(r.f, 12); i++) ppl += '<i></i>';
+        return '<div class="cell' + (r.f ? '' : ' zero') + '"><span>' + r.s + '</span><span class="ppl" aria-hidden="true">' + ppl + '</span><b>' + r.f + '</b></div>';
+      }).join('');
+      sum.textContent = n + ' fellows across ' + got + ' states and union territories. ' + (36 - got) + ' get none at this size.';
+    }
+    nf.addEventListener('input', function () { nr.value = Math.min(100, nf.value); drawAlloc(+nf.value); });
+    nr.addEventListener('input', function () { nf.value = nr.value; drawAlloc(+nr.value); });
+    drawAlloc(30);
+
+    function top10(key, el, other) {
+      var a = data.slice().sort(function (x, y) { return y[key] - x[key]; }).slice(0, 10);
+      var o = data.slice().sort(function (x, y) { return y[other] - x[other]; }).slice(0, 10).map(function (d) { return d.s; });
+      document.getElementById(el).innerHTML = a.map(function (d) { return '<li' + (o.indexOf(d.s) < 0 ? ' class="diff"' : '') + '>' + d.s + '</li>'; }).join('');
+    }
+    top10('t', 'r1', 'p'); top10('p', 'r2', 't');
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    ['background', 'problem', 'data', 'model', 'results', 'robust', 'limits'].forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  })();
+</script>
+</body></html>
